@@ -192,7 +192,7 @@ NFR-05（ロジック層の外部ライブラリ非依存・単体テスト可�
 - **所属コンポーネント**: COMP-03
 - **入力**: `root: tk.Tk`（COMP-01が生成したルートウィンドウ）, `game_logic: GameLogic`（COMP-01が生成したCOMP-02のインスタンス）
 - **出力**: なし（コンストラクタ）
-- **副作用**: あり。`root` 配下に `BoardView`（COMP-04, FUNC-14）と `StatusPanel`（COMP-05, FUNC-19）のインスタンスをそれぞれ生成しウィジェットとして配置する。生成した `BoardView` インスタンスは `self.board_view` として、`StatusPanel` インスタンスは `self.status_panel` として、それぞれインスタンス変数に保持する。`BoardView` 生成時には `self.on_board_click`（FUNC-12）を、`StatusPanel` 生成時には `self.on_restart_click`（FUNC-13）をコールバックとして渡す。`self.game_logic` として `game_logic` の参照を保持する。生成完了後、FUNC-11 `_show_initial_state()` を呼び出す。
+- **副作用**: あり。`root` 配下に `BoardView`（COMP-04, FUNC-14）と `StatusPanel`（COMP-05, FUNC-19）のインスタンスをそれぞれ生成しウィジェットとして配置する。`BoardView`・`StatusPanel` 生成時に渡す `parent` 引数は、いずれも本関数が受け取った `root` をそのまま渡す（`BoardView.__init__`・`StatusPanel.__init__` の `parent` 引数の型注釈は `tk.Widget` だが、tkinterでは `tk.Tk` インスタンスも `Widget` と同様に子ウィジェットの親として扱えるため型注釈上の問題はなく、実体は `root` である）。生成した `BoardView` インスタンスは `self.board_view` として、`StatusPanel` インスタンスは `self.status_panel` として、それぞれインスタンス変数に保持する。`BoardView` 生成時には `self.on_board_click`（FUNC-12）を、`StatusPanel` 生成時には `self.on_restart_click`（FUNC-13）をコールバックとして渡す。`self.game_logic` として `game_logic` の参照を保持する。生成完了後、FUNC-11 `_show_initial_state()` を呼び出す。
 - **境界値・異常系**: `root`・`game_logic` は常にCOMP-01から正しい型で渡されることが前提であり、本関数内での型チェックは行わない。
 - **対応要件ID・コンポーネントID**: REQ-02, CON-05 ／ COMP-03
 
@@ -202,7 +202,7 @@ NFR-05（ロジック層の外部ライブラリ非依存・単体テスト可�
 - **入力**: `self` のみ
 - **出力**: なし
 - **副作用**: あり。COMP-02への問い合わせを一切行わず（COMP-01が生成した直後の `GameLogic` は必ず「全マス空・黒番・対局中」の初期状態であることが設計上保証されているため）、`BoardView.draw_empty_board()`（FUNC-15）と `StatusPanel.show_turn('black')`（FUNC-20）を直接呼び出し、空の盤面と黒番の手番表示を指示する。
-- **対応要件ID・コンポーネントID**: REQ-02 ／ COMP-03
+- **対応要件ID・コンポーネントID**: REQ-02, REQ-12 ／ COMP-03
 
 #### FUNC-12: `MainWindow.on_board_click(self, row: int, col: int) -> None`
 
@@ -217,7 +217,7 @@ NFR-05（ロジック層の外部ライブラリ非依存・単体テスト可�
     3. `result.game_over=True` かつ `result.is_draw=True` の場合: `StatusPanel.show_draw()`（FUNC-22）を呼び出す。
     4. `result.game_over=False` の場合: `StatusPanel.show_turn(result.next_turn)`（FUNC-20）を呼び出す。
 - **副作用**: あり。COMP-02の状態を変更する呼び出しを行い、その結果に応じてCOMP-04・COMP-05へ描画・表示更新を指示する。
-- **境界値・異常系**: `MoveResult.valid=False` となるすべてのケース（既着手マス、対局終了後、盤面範囲外）で表示更新を行わないことをテストで確認する。
+- **境界値・異常系**: 本関数への入力自体は常に盤面範囲内であることがFUNC-17により保証されるため、盤面範囲外の入力に対するテストは本関数（FUNC-12）ではなくFUNC-05（`GameLogic.make_move`）の単体テストで検証する。FUNC-12では `MoveResult.valid=False` となる残りのケース（既着手マス、対局終了後）で表示更新を行わないことを確認する。
 - **対応要件ID・コンポーネントID**: REQ-04, REQ-05, REQ-06, REQ-07, REQ-10, REQ-11, REQ-12, NFR-04, NFR-05, CON-03 ／ COMP-03
 
 #### FUNC-13: `MainWindow.on_restart_click(self) -> None`
