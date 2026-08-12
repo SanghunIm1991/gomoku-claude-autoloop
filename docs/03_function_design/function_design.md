@@ -192,7 +192,7 @@ NFR-05（ロジック層の外部ライブラリ非依存・単体テスト可�
 - **所属コンポーネント**: COMP-03
 - **入力**: `root: tk.Tk`（COMP-01が生成したルートウィンドウ）, `game_logic: GameLogic`（COMP-01が生成したCOMP-02のインスタンス）
 - **出力**: なし（コンストラクタ）
-- **副作用**: あり。`root` 配下に `BoardView`（COMP-04, FUNC-14）と `StatusPanel`（COMP-05, FUNC-19）のインスタンスをそれぞれ生成しウィジェットとして配置する。`BoardView` 生成時には `self.on_board_click`（FUNC-12）を、`StatusPanel` 生成時には `self.on_restart_click`（FUNC-13）をコールバックとして渡す。`self.game_logic` として `game_logic` の参照を保持する。生成完了後、FUNC-11 `_show_initial_state()` を呼び出す。
+- **副作用**: あり。`root` 配下に `BoardView`（COMP-04, FUNC-14）と `StatusPanel`（COMP-05, FUNC-19）のインスタンスをそれぞれ生成しウィジェットとして配置する。生成した `BoardView` インスタンスは `self.board_view` として、`StatusPanel` インスタンスは `self.status_panel` として、それぞれインスタンス変数に保持する。`BoardView` 生成時には `self.on_board_click`（FUNC-12）を、`StatusPanel` 生成時には `self.on_restart_click`（FUNC-13）をコールバックとして渡す。`self.game_logic` として `game_logic` の参照を保持する。生成完了後、FUNC-11 `_show_initial_state()` を呼び出す。
 - **境界値・異常系**: `root`・`game_logic` は常にCOMP-01から正しい型で渡されることが前提であり、本関数内での型チェックは行わない。
 - **対応要件ID・コンポーネントID**: REQ-02, CON-05 ／ COMP-03
 
@@ -218,7 +218,7 @@ NFR-05（ロジック層の外部ライブラリ非依存・単体テスト可�
     4. `result.game_over=False` の場合: `StatusPanel.show_turn(result.next_turn)`（FUNC-20）を呼び出す。
 - **副作用**: あり。COMP-02の状態を変更する呼び出しを行い、その結果に応じてCOMP-04・COMP-05へ描画・表示更新を指示する。
 - **境界値・異常系**: `MoveResult.valid=False` となるすべてのケース（既着手マス、対局終了後、盤面範囲外）で表示更新を行わないことをテストで確認する。
-- **対応要件ID・コンポーネントID**: REQ-04, REQ-05, REQ-06, REQ-07, REQ-10, REQ-11, REQ-12, NFR-04 ／ COMP-03
+- **対応要件ID・コンポーネントID**: REQ-04, REQ-05, REQ-06, REQ-07, REQ-10, REQ-11, REQ-12, NFR-04, NFR-05, CON-03 ／ COMP-03
 
 #### FUNC-13: `MainWindow.on_restart_click(self) -> None`
 
@@ -228,7 +228,7 @@ NFR-05（ロジック層の外部ライブラリ非依存・単体テスト可�
 - **処理内容**: `self.game_logic.restart()`（FUNC-03）を呼び出し、その戻り値 `RestartResult` をもとに `BoardView.draw_empty_board()`（FUNC-15）と `StatusPanel.show_turn(result.next_turn)`（FUNC-20、常に `'black'`）を呼び出し、表示を初期状態に戻す。
 - **副作用**: あり。COMP-02の状態をリセットし、COMP-04・COMP-05へ表示初期化を指示する。
 - **境界値・異常系**: 対局中・勝敗確定後・引き分け確定後のいずれの表示状態から呼び出されても、同一の初期表示（空の盤面・黒番表示）になることを確認する。
-- **対応要件ID・コンポーネントID**: REQ-13 ／ COMP-03
+- **対応要件ID・コンポーネントID**: REQ-13, NFR-05 ／ COMP-03
 
 ### 4.4 COMP-04: 盤面表示（`BoardView`）
 
