@@ -38,7 +38,7 @@ COMP-02（ゲームロジック層）の節のみを収録する。
 
 - 対象コンポーネント: COMP-02 ゲームロジック（`GameLogic` クラス、`src/game_logic.py`）
 - 対応する関数ID: FUNC-02〜FUNC-09（関数設計書 4.2節）
-- 対応する要件ID: REQ-01, REQ-02, REQ-04〜REQ-09, REQ-13, NFR-04, NFR-05, CON-01, CON-02, CON-04
+- 対応する要件ID: REQ-01, REQ-02, REQ-04〜REQ-09, REQ-13, NFR-04, NFR-05, CON-01, CON-02, CON-03, CON-04, CON-05
 - 方針: COMP-02はtkinter等のGUIライブラリに一切依存しない純粋ロジック層であるため
   （NFR-05）、`tests/test_game_logic.py` はGUIを一切起動せず、`GameLogic` / `MoveResult` /
   `RestartResult` を直接importして検証する。`GameLogic` の内部属性（`board`,
@@ -107,4 +107,7 @@ COMP-02（ゲームロジック層）の節のみを収録する。
   （着手による盤面状態の反映）で間接的に検証される。CON-01（CPU機能を持たない）は、
   `GameLogic` が外部からの `make_move` 呼び出しなしに自律的に石を配置しないこと（TEST-01の
   初期状態確認、および他の全テストで `make_move` を明示的に呼び出さない限り盤面が変化しない
-  ことが一貫して確認されている点）をもって検証したものとする。
+  ことが一貫して確認されている点）をもって検証したものとする。CON-03（ネットワーク非対応）・
+  CON-05（tkinterのみ使用）はGUI層・実行環境に関わる制約であり、本テストモジュール
+  （COMP-02単体テスト）ではTEST-01（ロジック層の独立動作確認、CON-01と同様の趣旨）・
+  TEST-31（tkinter非依存の直接確認）を通じて間接的に確認する。
