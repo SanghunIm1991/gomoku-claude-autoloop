@@ -80,7 +80,7 @@
 | REQ-10 | |
 | REQ-11 | |
 | REQ-12 | |
-| REQ-13 | TEST-23, TEST-24, TEST-25, TEST-26, TEST-27 |
+| REQ-13 | TEST-01, TEST-23, TEST-24, TEST-25, TEST-26, TEST-27 |
 | NFR-01（欠番・CON-06に統合） | |
 | NFR-02（欠番・CON-07に統合） | |
 | NFR-03（欠番・CON-05に統合） | |

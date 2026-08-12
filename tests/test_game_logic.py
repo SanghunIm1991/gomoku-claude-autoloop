@@ -501,15 +501,29 @@ def test_30_many_moves_complete_without_noticeable_delay():
     """TEST-30: 盤面全マス相当（225回）分のmake_move呼び出しを行っても、
     体感遅延なく完了する（1秒未満）目安を満たすこと。
 
+    行優先順(r=0..14, c=0..14)で単純に埋めると、5連続同色が早期に成立して
+    game_state != 'in_progress' による即時リターンで大半の呼び出しが本処理
+    （盤面走査・勝敗判定）を通らなくなってしまう。そのためTEST-20と同じ
+    「5連続を作らない安全なパターン」（_pattern_color）に沿って着手し、
+    225回とも実際にロジックが実行されるようにする。
+
     NFR-04 / FUNC-05
     """
     game = GameLogic()
 
+    results = []
     start = time.perf_counter()
     for r in range(BOARD_SIZE):
         for c in range(BOARD_SIZE):
-            game.make_move(r, c)
+            game.current_turn = _pattern_color(r, c)
+            results.append(game.make_move(r, c))
     elapsed = time.perf_counter() - start
+
+    # 225回とも有効な着手としてロジック（盤面走査・勝敗判定）が実際に走った
+    # ことを確認したうえで、体感遅延の目安を検証する（このパターンでは5連続が
+    # 生じないため、最後の1手で盤面が埋まり引き分けが確定する形になる）。
+    assert all(result.valid for result in results)
+    assert all(cell is not None for row in game.board for cell in row)
 
     # 実際のGUI操作では1クリックあたり1秒未満(NFR-04)であればよいが、
     # ここでは225回分をまとめて実行しても十分高速であることを、
