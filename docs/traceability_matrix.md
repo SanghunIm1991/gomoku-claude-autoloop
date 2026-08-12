@@ -48,51 +48,58 @@
 
 ## ③関数×テスト（テストモジュール単位）
 
-| 関数ID | TESTMOD-01 |
-|---|---|
-| FUNC-01 | |
-| FUNC-02 | TEST-01, TEST-31 |
-| FUNC-03 | TEST-23, TEST-24, TEST-25, TEST-26, TEST-27, TEST-31 |
-| FUNC-04 | TEST-01, TEST-23, TEST-24, TEST-25, TEST-26, TEST-27, TEST-31 |
-| FUNC-05 | TEST-04, TEST-05, TEST-06, TEST-07, TEST-08, TEST-09, TEST-10, TEST-11, TEST-12, TEST-13, TEST-14, TEST-15, TEST-16, TEST-17, TEST-18, TEST-19, TEST-20, TEST-22, TEST-27, TEST-29, TEST-30, TEST-31 |
-| FUNC-06 | TEST-02, TEST-03, TEST-12, TEST-31 |
-| FUNC-07 | TEST-13, TEST-14, TEST-15, TEST-16, TEST-17, TEST-18, TEST-31 |
-| FUNC-08 | TEST-13, TEST-14, TEST-15, TEST-16, TEST-28, TEST-31 |
-| FUNC-09 | TEST-20, TEST-21, TEST-31 |
-| FUNC-10〜FUNC-23 | （COMP-03〜05分。今後のテスト工程で追記） |
+| 関数ID | TESTMOD-01 | TESTMOD-02 |
+|---|---|---|
+| FUNC-01 | | |
+| FUNC-02 | TEST-01, TEST-31 | |
+| FUNC-03 | TEST-23, TEST-24, TEST-25, TEST-26, TEST-27, TEST-31 | |
+| FUNC-04 | TEST-01, TEST-23, TEST-24, TEST-25, TEST-26, TEST-27, TEST-31 | |
+| FUNC-05 | TEST-04, TEST-05, TEST-06, TEST-07, TEST-08, TEST-09, TEST-10, TEST-11, TEST-12, TEST-13, TEST-14, TEST-15, TEST-16, TEST-17, TEST-18, TEST-19, TEST-20, TEST-22, TEST-27, TEST-29, TEST-30, TEST-31 | |
+| FUNC-06 | TEST-02, TEST-03, TEST-12, TEST-31 | |
+| FUNC-07 | TEST-13, TEST-14, TEST-15, TEST-16, TEST-17, TEST-18, TEST-31 | |
+| FUNC-08 | TEST-13, TEST-14, TEST-15, TEST-16, TEST-28, TEST-31 | |
+| FUNC-09 | TEST-20, TEST-21, TEST-31 | |
+| FUNC-10〜FUNC-13 | （COMP-03分。今後のテスト工程で追記） | |
+| FUNC-14 | | TEST-32, TEST-33, TEST-34 |
+| FUNC-15 | | TEST-35, TEST-36 |
+| FUNC-16 | | TEST-36, TEST-37, TEST-38, TEST-46 |
+| FUNC-17 | | TEST-39, TEST-40, TEST-41, TEST-42, TEST-43 |
+| FUNC-18 | | TEST-44, TEST-45 |
+| FUNC-19〜FUNC-23 | （COMP-05分。今後のテスト工程で追記） | |
 
-テストモジュールID一覧: TESTMOD-01 = `tests/test_game_logic.py`（COMP-02対応）。テストケースの
-詳細（目的・入力/前提条件・期待結果）は `docs/04_test/test_specification.md` を参照。
+テストモジュールID一覧: TESTMOD-01 = `tests/test_game_logic.py`（COMP-02対応）、
+TESTMOD-02 = `tests/test_board_view.py`（COMP-04対応）。テストケースの詳細
+（目的・入力/前提条件・期待結果）は `docs/04_test/test_specification.md` を参照。
 
 ## ④要件×テスト（直接検証トレース、テストモジュール単位）
 
-| 要件ID | TESTMOD-01 |
-|---|---|
-| REQ-01 | TEST-01, TEST-02, TEST-03 |
-| REQ-02 | TEST-01 |
-| REQ-03（欠番・REQ-12に統合） | |
-| REQ-04 | TEST-04, TEST-05, TEST-06, TEST-07, TEST-12 |
-| REQ-05 | TEST-04, TEST-05, TEST-19, TEST-22 |
-| REQ-06 | TEST-08, TEST-29 |
-| REQ-07 | TEST-09, TEST-10, TEST-11, TEST-19, TEST-29 |
-| REQ-08 | TEST-13, TEST-14, TEST-15, TEST-16, TEST-17, TEST-18, TEST-19, TEST-28 |
-| REQ-09 | TEST-20, TEST-21, TEST-22 |
-| REQ-10 | |
-| REQ-11 | |
-| REQ-12 | |
-| REQ-13 | TEST-01, TEST-23, TEST-24, TEST-25, TEST-26, TEST-27 |
-| NFR-01（欠番・CON-06に統合） | |
-| NFR-02（欠番・CON-07に統合） | |
-| NFR-03（欠番・CON-05に統合） | |
-| NFR-04 | TEST-30 |
-| NFR-05 | TEST-31 |
-| CON-01 | TEST-01 |
-| CON-02 | TEST-02, TEST-03, TEST-06, TEST-07, TEST-12 |
-| CON-03 | |
-| CON-04 | TEST-01, TEST-04, TEST-05 |
-| CON-05 | |
-| CON-06 | |
-| CON-07 | |
+| 要件ID | TESTMOD-01 | TESTMOD-02 |
+|---|---|---|
+| REQ-01 | TEST-01, TEST-02, TEST-03 | TEST-32, TEST-34, TEST-35 |
+| REQ-02 | TEST-01 | TEST-32, TEST-34, TEST-35 |
+| REQ-03（欠番・REQ-12に統合） | | |
+| REQ-04 | TEST-04, TEST-05, TEST-06, TEST-07, TEST-12 | TEST-33, TEST-37, TEST-38, TEST-39, TEST-40, TEST-41, TEST-42, TEST-43, TEST-44, TEST-45 |
+| REQ-05 | TEST-04, TEST-05, TEST-19, TEST-22 | |
+| REQ-06 | TEST-08, TEST-29 | |
+| REQ-07 | TEST-09, TEST-10, TEST-11, TEST-19, TEST-29 | |
+| REQ-08 | TEST-13, TEST-14, TEST-15, TEST-16, TEST-17, TEST-18, TEST-19, TEST-28 | |
+| REQ-09 | TEST-20, TEST-21, TEST-22 | |
+| REQ-10 | | |
+| REQ-11 | | |
+| REQ-12 | | |
+| REQ-13 | TEST-01, TEST-23, TEST-24, TEST-25, TEST-26, TEST-27 | TEST-36 |
+| NFR-01（欠番・CON-06に統合） | | |
+| NFR-02（欠番・CON-07に統合） | | |
+| NFR-03（欠番・CON-05に統合） | | |
+| NFR-04 | TEST-30 | TEST-37, TEST-46 |
+| NFR-05 | TEST-31 | |
+| CON-01 | TEST-01 | |
+| CON-02 | TEST-02, TEST-03, TEST-06, TEST-07, TEST-12 | TEST-32, TEST-34, TEST-35, TEST-38, TEST-39, TEST-40, TEST-41, TEST-42, TEST-43 |
+| CON-03 | | |
+| CON-04 | TEST-01, TEST-04, TEST-05 | TEST-37, TEST-38 |
+| CON-05 | | |
+| CON-06 | | |
+| CON-07 | | |
 
 REQ-10, REQ-11, REQ-12はCOMP-03/COMP-05（GUI層）の責務であり、COMP-02のテストモジュール
 （TESTMOD-01）では検証対象外（今後のCOMP-03/05分のテスト工程で追記）。CON-03（ネットワーク非対応）・
@@ -100,5 +107,13 @@ CON-05（tkinterのみ使用）・CON-06（Windows限定）・CON-07（Python 3.
 実行環境に関する制約であり、GUIに依存しないCOMP-02の単体テストでは直接検証しない
 （CON-05はNFR-05の検証（TEST-31、game_logicモジュールがtkinterに依存しないことの確認）が
 間接的な裏付けとなる）。
+
+TESTMOD-02（`tests/test_board_view.py`、COMP-04対応）は、コンポーネント設計書・関数設計書上
+COMP-04が対応する要件のうちREQ-01, REQ-02, REQ-04, REQ-13, NFR-04, CON-02, CON-04を検証対象
+とする（`docs/04_test/test_specification.md` 4.0節参照）。REQ-05〜REQ-12はCOMP-02/COMP-03/
+COMP-05の責務でありCOMP-04のテストモジュールでは検証対象外。CON-05（tkinterのみ使用）は
+COMP-04の対応要件としてコンポーネント設計書・関数設計書に記載があるものの、本テスト工程回
+（COMP-04分）では明示的な検証対象に含めていない（COMP-01/03/05を含めたGUI層全体としての
+tkinter専用確認は今後のテスト工程で検討する）。
 
 テスト工程完了時には、④の全要件ID（REQ/NFR/CON）の行に最低1つのテストIDが記載されていることを確認し、網羅性チェックとする。ただし、REQ-03・NFR-01・NFR-02・NFR-03は要件定義書上で廃止（欠番）とし統合先（それぞれREQ-12・CON-06・CON-07・CON-05）に一本化されているため、この網羅性チェックの対象からは除外し、統合先IDの行でカバーされていることをもって足りるものとする。

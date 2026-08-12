@@ -10,7 +10,7 @@
 
 テスト工程はコンポーネント単位で分割して進め、本書は単一ファイルとして工程が進むたびに
 コンポーネント節を追記していく（`docs/traceability_matrix.md` と同様の運用方針）。現時点では
-COMP-02（ゲームロジック層）の節のみを収録する。
+COMP-02（ゲームロジック層）・COMP-04（盤面表示層）の節を収録する。
 
 ## 1. ID採番方針
 
@@ -28,6 +28,7 @@ COMP-02（ゲームロジック層）の節のみを収録する。
 | テストモジュールID | ファイルパス | 対応コンポーネントID |
 |---|---|---|
 | TESTMOD-01 | `tests/test_game_logic.py` | COMP-02 |
+| TESTMOD-02 | `tests/test_board_view.py` | COMP-04 |
 
 `tests/` から `src/` 配下のモジュールをimportできるよう、プロジェクト直下に `conftest.py` を
 配置し、`sys.path` に `src` ディレクトリを追加している。
@@ -111,3 +112,75 @@ COMP-02（ゲームロジック層）の節のみを収録する。
   CON-05（tkinterのみ使用）はGUI層・実行環境に関わる制約であり、本テストモジュール
   （COMP-02単体テスト）ではTEST-01（ロジック層の独立動作確認、CON-01と同様の趣旨）・
   TEST-31（tkinter非依存の直接確認）を通じて間接的に確認する。
+
+## 4. COMP-04（盤面表示層）節
+
+### 4.0 対象・方針
+
+- 対象コンポーネント: COMP-04 盤面表示（`BoardView` クラス、`src/board_view.py`）
+- 対応する関数ID: FUNC-14〜FUNC-18（関数設計書 4.4節）
+- 対応する要件ID: REQ-01, REQ-02, REQ-04, REQ-13, NFR-04, CON-02, CON-04
+- 方針: COMP-04は実際に `tkinter.Canvas` を生成して描画するGUI層のコンポーネントであるため、
+  `tests/test_board_view.py` では実際に `tkinter.Tk()`（ルートウィンドウ）を生成し、
+  `root.withdraw()` により非表示化した上で、その配下に `BoardView` を構築して検証する。
+  `tk.Tk()` の生成はモジュール内で1つの `Tk` インスタンスを共有する構成とし
+  （`scope="module"` のfixture）、本テストモジュールの全テスト終了後に `root.destroy()` を
+  1回呼び出して破棄する。これはテスト関数ごとに毎回 `tk.Tk()` を生成・破棄すると、環境に
+  よってはTclライブラリファイルの再読み込みが短時間に連続することに起因する一時的な
+  ファイル読み込みエラーが散発的に発生することを確認したためであり（Python/tkinter/実装
+  コード自体の不具合ではない）、これを避ける目的である。各テストで検証対象となる
+  `Canvas`（`BoardView` インスタンス）はテスト関数単位で生成し、テスト終了後に
+  `canvas.destroy()` で個別に破棄する（テスト間でのウィジェット・リソースのリーク防止）。
+  検証は、`BoardView` が内部で保持するCanvas（`_canvas`）に対して `find_all()` /
+  `itemcget()` / `coords()` / `type()` を用いてCanvas上の描画アイテムを直接調べる方法、
+  および内部ヘルパー `_pixel_to_cell` / `_on_canvas_click` を直接呼び出す方法による、
+  COMP-02節（3.0節）と同様のホワイトボックステストの手法を用いる。
+  クリックイベントの検証（FUNC-18）は、`tkinter.Event` を模した単純なオブジェクト
+  （`x`, `y` 属性のみを持つ `types.SimpleNamespace`）を用いて `_on_canvas_click` を直接
+  呼び出す方法を採用する（`canvas.event_generate` によるTkイベントキュー経由の方法と比べ、
+  非表示ウィンドウ・自動テスト環境でも実行結果が安定するため）。
+
+### 4.1 テストケース一覧
+
+| テストID | テスト対象(関数ID) | 対応要件ID | 目的 | 入力/前提条件 | 期待結果 | 対応テスト関数名 |
+|---|---|---|---|---|---|---|
+| TEST-32 | FUNC-14 | REQ-01, REQ-02, CON-02 | `BoardView` の初期化により、指定ピクセルサイズ（盤面全体, 600×600）の `Canvas` がparent配下に生成・配置されることを確認する | `tk.Tk()` を親として `BoardView(root, on_click)` を生成した直後 | `board_view._canvas` が `tk.Canvas` のインスタンスである。`int(canvas.cget('width')) == BOARD_PIXEL_SIZE`（600）。`int(canvas.cget('height')) == BOARD_PIXEL_SIZE`（600） | `test_32_init_creates_canvas_with_board_pixel_size` |
+| TEST-33 | FUNC-14 | REQ-04 | 初期化時、Canvasの `<Button-1>` イベントに `_on_canvas_click` へのバインドが設定されていることを確認する | `BoardView(root, on_click)` を生成した直後 | `canvas.bind('<Button-1>')` が空文字列でない（Tclコマンド名が返り、バインドが存在することを示す） | `test_33_init_binds_button1_to_on_canvas_click` |
+| TEST-34 | FUNC-14 | REQ-01, REQ-02, CON-02 | 初期化直後に `draw_empty_board()` が呼ばれ、格子線のみが描画され石が1つも存在しないことを確認する | `BoardView(root, on_click)` を生成した直後（`draw_empty_board()` を明示的に呼ばない） | `canvas.find_all()` の件数が32（15×15マス分の格子線: 横16本+縦16本）。すべてのアイテムの `canvas.type(item) == 'line'`。`'oval'` 型のアイテムは存在しない | `test_34_init_calls_draw_empty_board_and_draws_grid_lines_only` |
+| TEST-35 | FUNC-15 | REQ-01, REQ-02, CON-02 | `draw_empty_board()` により、15×15マス分の格子線が正しい座標で描画されることを確認する（正常系） | `BoardView` 生成後、`draw_empty_board()` を明示的に呼び出す | 格子線の座標の集合が、`{(0, i*40, 600, i*40) for i in range(16)} ∪ {(i*40, 0, i*40, 600) for i in range(16)}`（計32本）と一致する。石（`oval`）は存在しない | `test_35_draw_empty_board_draws_grid_lines_with_correct_coordinates` |
+| TEST-36 | FUNC-15, FUNC-16 | REQ-13 | 石が描画された状態から `draw_empty_board()` を呼ぶと、石を含む描画内容がすべて消去され格子線のみの状態に戻ることを確認する（リスタート時の盤面クリアに相当） | `BoardView` 生成後、`draw_stone(5, 5, 'black')` と `draw_stone(2, 2, 'white')` を呼び出して石を2つ描画した状態で `draw_empty_board()` を呼ぶ | `draw_empty_board()` 呼び出し後、`canvas.find_all()` の件数が32、すべて `type == 'line'` であり、`'oval'` 型のアイテムが1つも存在しない（呼び出し前は `oval` が2つ存在したことも確認する） | `test_36_draw_empty_board_clears_existing_stones` |
+| TEST-37 | FUNC-16 | REQ-04, CON-04, NFR-04 | 指定マスの中心に指定色（黒・白）で塗りつぶした円が描画されることを確認する | `draw_stone(7, 7, 'black')` および `draw_stone(3, 10, 'white')` を呼び出す | (7,7)黒: 生成された `oval` の `coords` が `(284, 284, 316, 316)`（中心 (300,300)、半径16）、`itemcget('fill') == 'black'`。(3,10)白: `coords` が `(404, 124, 436, 156)`（中心 (420,140)、半径16）、`itemcget('fill') == 'white'` | `test_37_draw_stone_draws_circle_of_specified_color_at_cell_center` |
+| TEST-38 | FUNC-16 | REQ-04, CON-02, CON-04 | 盤面端 `(0,0)`・`(14,14)` への石描画が正しい中心位置に行われることを確認する（境界値） | `draw_stone(0, 0, 'black')` と `draw_stone(14, 14, 'white')` を呼び出す | `(0,0)`: `coords` が `(4, 4, 36, 36)`（中心 (20,20)）。`(14,14)`: `coords` が `(564, 564, 596, 596)`（中心 (580,580)） | `test_38_draw_stone_at_board_corners_top_left_and_bottom_right` |
+| TEST-39 | FUNC-17 | REQ-04, CON-02 | マス目の境界線ちょうどのピクセル座標は、整数除算の切り捨てにより下側・右側に隣接するマスに属すると判定されることを確認する（境界値） | `_pixel_to_cell(x, y)` に `(40, 0)`, `(0, 40)`, `(40, 40)` を渡す | `(40,0) -> (0,1)`。`(0,40) -> (1,0)`。`(40,40) -> (1,1)`（いずれも境界線を挟んで手前のマス `(0,0)` ではなく、次のマスに属する） | `test_39_pixel_to_cell_boundary_falls_to_next_cell` |
+| TEST-40 | FUNC-17 | REQ-04, CON-02 | 盤面左上端のピクセル `(0, 0)` が `(0, 0)` セルに対応することを確認する（境界値） | `_pixel_to_cell(0, 0)` | 戻り値が `(0, 0)` | `test_40_pixel_to_cell_top_left_pixel_is_cell_0_0` |
+| TEST-41 | FUNC-17 | REQ-04, CON-02 | 盤面右下端の最終ピクセル（`BOARD_PIXEL_SIZE - 1` = 599）が `(14, 14)` セルに対応し、範囲内の値を返すことを確認する（境界値） | `_pixel_to_cell(599, 599)` | 戻り値が `(14, 14)` | `test_41_pixel_to_cell_last_pixel_is_cell_14_14` |
+| TEST-42 | FUNC-17 | REQ-04, CON-02 | 盤面ピクセルサイズ（600）と**ちょうど等しい**座標は `None` を返すことを確認する（境界値。「超える」場合だけでなく「等しい」場合も `None` になる点を検証する） | `_pixel_to_cell(x, y)` に `(600, 600)`, `(600, 300)`, `(300, 600)` を渡す | いずれも戻り値が `None` | `test_42_pixel_to_cell_equal_to_board_pixel_size_returns_none` |
+| TEST-43 | FUNC-17 | REQ-04, CON-02 | 負の座標、および盤面ピクセルサイズを超える座標は `None` を返すことを確認する（異常系） | `_pixel_to_cell(x, y)` に `(-1, -1)`, `(-1, 300)`, `(300, -1)`, `(601, 601)`, `(1000, 1000)` を渡す | いずれも戻り値が `None` | `test_43_pixel_to_cell_negative_and_over_board_pixel_size_returns_none` |
+| TEST-44 | FUNC-18 | REQ-04 | 盤面内クリックで、`_pixel_to_cell` の変換結果をもとに `on_cell_click` コールバックが正しい `(row, col)` で1回呼ばれることを確認する | `x`, `y` 属性を持つ模擬イベントオブジェクトで `_on_canvas_click(event)` を呼び出す。`(x, y) = (300, 300)` および `(45, 125)` の2パターン | `(300,300) -> (7,7)` でコールバックが呼ばれる。`(45,125) -> (3,1)`（`row` は `y` 由来、`col` は `x` 由来であることを区別して確認）でコールバックが呼ばれる。いずれもコールバックの呼び出し回数は1回 | `test_44_on_canvas_click_inside_board_invokes_callback_with_correct_cell` |
+| TEST-45 | FUNC-18 | REQ-04 | 盤面外クリック（`_pixel_to_cell` が `None` を返す座標）では `on_cell_click` コールバックが呼ばれないことを確認する | `x`, `y` 属性を持つ模擬イベントオブジェクトで `_on_canvas_click(event)` を呼び出す。`(x, y) = (600, 600)` および `(-1, -1)` の2パターン | いずれもコールバックが1度も呼ばれない（呼び出し回数0） | `test_45_on_canvas_click_outside_board_does_not_invoke_callback` |
+| TEST-46 | FUNC-16 | NFR-04 | 盤面全マス相当（225回）分の `draw_stone` 呼び出しが体感遅延なく完了する目安（1秒未満）を満たすことを確認する | 15×15全マスに対して順に `draw_stone(row, col, color)` を225回呼び出す（色は市松状に黒/白を交互指定） | 225回分の合計実行時間が1秒未満 | `test_46_many_draw_stone_calls_complete_without_noticeable_delay` |
+
+### 4.2 補足
+
+- TEST-32〜TEST-46はいずれも、実際に `tk.Tk()` を生成し `root.withdraw()` で非表示化した上で
+  `BoardView` を構築し、Canvas上の実際の描画結果を検証する（4.0節参照）。`conftest.py` は
+  `sys.path` への `src` 追加のみを行いGUI関連の初期化は行わないため、`import tkinter` および
+  `tk.Tk()` の呼び出しは `tests/test_board_view.py` 側で行う。
+- TEST-37・TEST-38（`draw_stone` の描画位置検証）で用いる中心座標・円の座標は、
+  `src/board_view.py` の実装（`center = col*40+20` または `row*40+20`、
+  `radius = 20 - _STONE_MARGIN(4) = 16`）から機械的に算出した値であり、関数設計書FUNC-16の
+  「指定マスの中心に、指定色で塗りつぶした円を描画する」という仕様どおりの位置に描画されて
+  いることの確認である。
+- TEST-39〜TEST-43（`_pixel_to_cell` の境界値）は、関数設計書FUNC-17の境界値・異常系の記述
+  （「境界線は下側・右側に隣接するマスに属する」「盤面の描画領域サイズと**等しい**場合も
+  `None` になる」）を1件ずつ網羅する形で設計している。
+- TEST-44・TEST-45（`_on_canvas_click` のクリックハンドラ検証）は、4.0節の方針に従い
+  `tkinter.Event` を模した `types.SimpleNamespace(x=.., y=..)` を用いて直接呼び出す方法を
+  採用している。盤面範囲外座標に対するFUNC-17（`_pixel_to_cell`）自体の`None`判定の網羅性は
+  TEST-42・TEST-43で別途検証済みのため、TEST-45では代表的な2パターン（ちょうど等しい座標・
+  負の座標）のみを確認する。
+- REQ-01・REQ-02・CON-02は主にTEST-32・TEST-34・TEST-35（Canvasサイズ・初期格子線描画）で、
+  REQ-04は主にTEST-33・TEST-37〜TEST-45（クリック→座標変換→石描画・コールバック通知の一連の
+  流れ）で、REQ-13はTEST-36（リスタート時の盤面クリアに相当する `draw_empty_board()` による
+  石の消去）で、CON-04はTEST-37・TEST-38（黒・白2色の描画）で、それぞれ検証する。NFR-04は
+  TEST-37・TEST-46（実際の描画処理の体感遅延なしでの完了）で検証する。
