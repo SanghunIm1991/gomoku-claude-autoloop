@@ -136,7 +136,7 @@ def test_05_white_move_places_stone_and_switches_turn_to_black():
 def test_06_move_at_top_left_corner_succeeds():
     """TEST-06: 盤面端(0,0)への配置が正常に成功すること（境界値）。
 
-    REQ-04 / FUNC-05
+    REQ-04, CON-02 / FUNC-05
     """
     game = GameLogic()
     result = game.make_move(0, 0)
@@ -148,7 +148,7 @@ def test_06_move_at_top_left_corner_succeeds():
 def test_07_move_at_bottom_right_corner_succeeds():
     """TEST-07: 盤面端(14,14)への配置が正常に成功すること（境界値）。
 
-    REQ-04 / FUNC-05
+    REQ-04, CON-02 / FUNC-05
     """
     game = GameLogic()
     result = game.make_move(14, 14)
@@ -295,7 +295,7 @@ def test_16_diagonal_up_right_five_in_a_row_wins():
 def test_17_six_in_a_row_also_wins():
     """TEST-17: 5個ちょうどではなく6個以上連続する場合も勝利と判定されること。
 
-    REQ-08（境界値） / FUNC-05, FUNC-07
+    REQ-08 / FUNC-05, FUNC-07
     """
     game = GameLogic()
     _place_line(game, [(9, 3), (9, 4), (9, 5), (9, 6), (9, 7)], "black")
@@ -312,7 +312,7 @@ def test_17_six_in_a_row_also_wins():
 def test_18_four_in_a_row_does_not_win():
     """TEST-18: 4個連続では勝利判定にならないこと（境界値）。
 
-    REQ-08（境界値） / FUNC-05, FUNC-07
+    REQ-08 / FUNC-05, FUNC-07
     """
     game = GameLogic()
     _place_line(game, [(10, 3), (10, 4), (10, 5)], "black")
@@ -330,7 +330,7 @@ def test_18_four_in_a_row_does_not_win():
 def test_19_turn_does_not_switch_when_game_is_won():
     """TEST-19: 勝敗が確定した着手では手番が切り替わらないこと（戻り値・内部状態の両面）。
 
-    REQ-05, REQ-08 / FUNC-05
+    REQ-05, REQ-07, REQ-08 / FUNC-05
     """
     game = GameLogic()
     _place_line(game, [(1, 1), (1, 2), (1, 3), (1, 4)], "black")
@@ -374,7 +374,7 @@ def test_20_board_full_without_winner_is_draw():
 def test_21_board_with_one_empty_cell_is_not_full():
     """TEST-21: 224マス埋まり1マスのみ空の場合、盤面充填チェックはFalseとなること（境界値）。
 
-    REQ-09（境界値） / FUNC-09
+    REQ-09 / FUNC-09
     """
     game = GameLogic()
     _fill_board_no_win(game, exclude=(0, 0))
@@ -411,7 +411,7 @@ def test_23_24_25_26_restart_from_any_state_resets_to_initial(setup_state):
     """TEST-23/24/25/26: 対局中・黒勝利後・白勝利後・引き分け後のいずれの状態から
     リスタートを呼び出しても、常に同一の初期状態（全マス空・黒番・対局中）に戻ること。
 
-    REQ-13 / FUNC-03
+    REQ-13 / FUNC-03, FUNC-04
     """
     game = GameLogic()
     game.make_move(6, 6)  # 何らかの着手で状態を変化させておく
@@ -431,7 +431,7 @@ def test_23_24_25_26_restart_from_any_state_resets_to_initial(setup_state):
 def test_27_move_is_accepted_after_restart_and_board_is_clear():
     """TEST-27: リスタート後は盤面がクリアされ、通常どおり着手を受け付けること。
 
-    REQ-13 / FUNC-03, FUNC-05
+    REQ-13 / FUNC-03, FUNC-04, FUNC-05
     """
     game = GameLogic()
     game.make_move(6, 6)
