@@ -192,7 +192,7 @@ NFR-05（ロジック層の外部ライブラリ非依存・単体テスト可�
 - **所属コンポーネント**: COMP-03
 - **入力**: `root: tk.Tk`（COMP-01が生成したルートウィンドウ）, `game_logic: GameLogic`（COMP-01が生成したCOMP-02のインスタンス）
 - **出力**: なし（コンストラクタ）
-- **副作用**: あり。`root` 配下に `BoardView`（COMP-04, FUNC-14）と `StatusPanel`（COMP-05, FUNC-19）のインスタンスをそれぞれ生成しウィジェットとして配置する。`BoardView`・`StatusPanel` 生成時に渡す `parent` 引数は、いずれも本関数が受け取った `root` をそのまま渡す（`BoardView.__init__`・`StatusPanel.__init__` の `parent` 引数の型注釈は `tk.Widget` だが、tkinterでは `tk.Tk` インスタンスも `Widget` と同様に子ウィジェットの親として扱えるため型注釈上の問題はなく、実体は `root` である）。生成した `BoardView` インスタンスは `self.board_view` として、`StatusPanel` インスタンスは `self.status_panel` として、それぞれインスタンス変数に保持する。`BoardView` 生成時には `self.on_board_click`（FUNC-12）を、`StatusPanel` 生成時には `self.on_restart_click`（FUNC-13）をコールバックとして渡す。`self.game_logic` として `game_logic` の参照を保持する。生成完了後、FUNC-11 `_show_initial_state()` を呼び出す。
+- **副作用**: あり。`root` 配下に `BoardView`（COMP-04, FUNC-14）と `StatusPanel`（COMP-05, FUNC-19）のインスタンスをそれぞれ生成しウィジェットとして配置する。`BoardView`・`StatusPanel` 生成時に渡す `parent` 引数は、いずれも本関数が受け取った `root` をそのまま渡す（`BoardView.__init__`・`StatusPanel.__init__` の `parent` 引数の型注釈は `tk.Widget` だが、型注釈上は`tk.Widget`と`tk.Tk`は別クラスであるものの、tkinterの実装上`Tk`は`Widget`と共通のメソッド（`Misc`由来）を持つため実行時には問題なく動作する。実体は `root` である）。生成した `BoardView` インスタンスは `self.board_view` として、`StatusPanel` インスタンスは `self.status_panel` として、それぞれインスタンス変数に保持する。`BoardView` 生成時には `self.on_board_click`（FUNC-12）を、`StatusPanel` 生成時には `self.on_restart_click`（FUNC-13）をコールバックとして渡す。`self.game_logic` として `game_logic` の参照を保持する。生成完了後、FUNC-11 `_show_initial_state()` を呼び出す。
 - **境界値・異常系**: `root`・`game_logic` は常にCOMP-01から正しい型で渡されることが前提であり、本関数内での型チェックは行わない。
 - **対応要件ID・コンポーネントID**: REQ-02, CON-05 ／ COMP-03
 
