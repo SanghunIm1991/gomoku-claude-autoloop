@@ -6,6 +6,8 @@
       "Bash(git status *)",
       "PowerShell(git status *)",
       "Bash(cat)",
+      "Bash(py *)",
+      "PowerShell(py *)",
       "WebSearch"
     ],
     "deny": [
