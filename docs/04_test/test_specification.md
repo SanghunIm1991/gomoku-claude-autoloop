@@ -11,7 +11,8 @@
 テスト工程はコンポーネント単位で分割して進め、本書は単一ファイルとして工程が進むたびに
 コンポーネント節を追記していく（`docs/traceability_matrix.md` と同様の運用方針）。現時点では
 COMP-02（ゲームロジック層）・COMP-04（盤面表示層）・COMP-05（ステータス表示・操作パネル層）・
-COMP-03（メインウィンドウ・GUIコントローラ層）の節を収録する。
+COMP-03（メインウィンドウ・GUIコントローラ層）・COMP-01（エントリーポイント）の節を収録し、
+全コンポーネント（COMP-01〜05）のテストが揃った。
 
 ## 1. ID採番方針
 
@@ -32,6 +33,7 @@ COMP-03（メインウィンドウ・GUIコントローラ層）の節を収録�
 | TESTMOD-02 | `tests/test_board_view.py` | COMP-04 |
 | TESTMOD-03 | `tests/test_status_panel.py` | COMP-05 |
 | TESTMOD-04 | `tests/test_main_window.py` | COMP-03 |
+| TESTMOD-05 | `tests/test_main.py` | COMP-01 |
 
 `tests/` から `src/` 配下のモジュールをimportできるよう、プロジェクト直下に `conftest.py` を
 配置し、`sys.path` に `src` ディレクトリを追加している。
@@ -391,3 +393,72 @@ COMP-03（メインウィンドウ・GUIコントローラ層）の節を収録�
   判定ロジックの網羅的な検証はTESTMOD-01（COMP-02節、REQ-08はTEST-13〜TEST-19・TEST-28、
   REQ-09はTEST-20〜TEST-22）を、CON-04（黒白2色描画）そのものの網羅的な検証はTESTMOD-02（COMP-04節、
   TEST-37・TEST-38）・TESTMOD-03（COMP-05節、TEST-49〜TEST-52）を参照。
+
+## 7. COMP-01（エントリーポイント）節
+
+### 7.0 対象・方針
+
+- 対象コンポーネント: COMP-01 エントリーポイント（`main()` 関数、`src/main.py`）
+- 対応する関数ID: FUNC-01（関数設計書 4.1節）
+- 対応する要件ID: REQ-02, CON-05, CON-06, CON-07
+- 方針: FUNC-01 `main()` は、`tk.Tk()` ルートウィンドウの生成 → `GameLogic` インスタンスの
+  生成 → 両方を引数とした `MainWindow` インスタンスの生成 → `root.mainloop()` の呼び出し、
+  という一連の起動処理（副作用）のみからなる関数であり、`root.mainloop()` を実際に呼び出すと
+  tkinterのイベントループが開始され自動テストの実行がブロックされてしまう。そのため
+  `tests/test_main.py` では、`main` モジュール内で参照されている `tk`（`tkinter` モジュール）・
+  `GameLogic`・`MainWindow` の3つの名前を、呼び出し内容（生成回数・引数・呼び出し順序）を
+  記録するだけの軽量なテスト用ダブルに `monkeypatch` で差し替え、実際のtkinterウィンドウ・
+  イベントループを一切起動せずに `main()` の配線（orchestration）がFUNC-01の副作用仕様
+  どおりであることを検証する（`MainWindow` 自身の内部動作は6節のTESTMOD-04で別途検証済みで
+  あり、本節の関心は `main()` からの呼び出し配線のみである）。ただし `GameLogic` 自体は
+  tkinterに依存しない軽量なロジック層のクラスであり（NFR-05）、モックにする必要性が薄いため、
+  実際のクラスをそのまま使用する（生成されたインスタンスが実際に `GameLogic` の型であること、
+  かつ `MainWindow` に渡されたインスタンスと同一であることを確認する）。
+- CON-06（対応OSはWindowsのみ）・CON-07（Python 3.11環境上で動作）については、FUNC-01自体
+  （および他のいずれの関数）もOS・Pythonバージョンを実行時に判定・分岐するロジックを持たない
+  ため、実装のテストとしてこれらを直接検証することはできない。そのため本節では、「本テスト
+  実行環境がCON-06・CON-07の前提を満たしていること」を確認する環境確認テスト
+  （`platform.system()`・`sys.version_info` の確認）として設計する。この種のテストはあくまで
+  テスト実行環境の確認であり、実装が動的にOS・Pythonバージョンを検知・強制していることの
+  証明ではない点に留意する（7.2節に限界を明記する）。CON-05（tkinter以外のGUIフレームワークを
+  使用しない）については、`tests/test_game_logic.py` のTEST-31（`game_logic` モジュールが
+  tkinterに依存しないことの確認）と同様に、`src/main.py` のソースをASTで解析しimport文を
+  抽出する方法により、tkinter以外のGUIフレームワークをimportしていないことを直接検証する。
+
+### 7.1 テストケース一覧
+
+| テストID | テスト対象(関数ID) | 対応要件ID | 目的 | 入力/前提条件 | 期待結果 | 対応テスト関数名 |
+|---|---|---|---|---|---|---|
+| TEST-76 | FUNC-01 | REQ-02 | `main()` 呼び出しにより、tk.Tk相当のルートウィンドウが1回だけ生成されることを確認する | `tk`/`GameLogic`/`MainWindow` をテスト用ダブルに差し替えた状態で `main()` を呼び出す | tk.Tk相当のスタブインスタンスが1個だけ生成される | `test_76_main_creates_tk_root_exactly_once` |
+| TEST-77 | FUNC-01 | REQ-02 | `main()` 呼び出しにより、`GameLogic` のインスタンスが1回だけ生成され、それが実際の `GameLogic` インスタンスであることを確認する | 同上 | `GameLogic` 生成が1回。生成されたインスタンスが `isinstance(x, GameLogic)` を満たす | `test_77_main_creates_game_logic_instance_exactly_once` |
+| TEST-78 | FUNC-01 | REQ-02 | `main()` 呼び出しにより、`MainWindow` が、生成されたtk.Tk相当のroot・`GameLogic` インスタンスの両方を `(root, game_logic)` の順序で引数として1回だけ生成されることを確認する | 同上 | `MainWindow` 相当のスタブ生成が1回。渡された `root` が生成されたtkスタブインスタンスと同一（`is`）。渡された `game_logic` が生成された `GameLogic` インスタンスと同一（`is`） | `test_78_main_creates_main_window_once_with_root_and_game_logic` |
+| TEST-79 | FUNC-01 | REQ-02 | `main()` 呼び出しにより、生成されたrootの `mainloop()` が1回だけ呼ばれることを確認する | 同上 | mainloopスタブの呼び出し回数が1 | `test_79_main_calls_root_mainloop_once` |
+| TEST-80 | FUNC-01 | REQ-02 | `main()` 内の各処理が「tk.Tk生成→GameLogic生成→MainWindow生成→mainloop開始」の順序で実行されることを確認する | 同上 | 呼び出し順序を記録したログが `["tk", "game_logic", "main_window", "mainloop"]` と一致する | `test_80_main_executes_steps_in_correct_order` |
+| TEST-81 | FUNC-01 | REQ-02 | `main()` の戻り値が `None` であることを確認する（関数設計書FUNC-01の出力仕様） | 同上 | 戻り値が `None` | `test_81_main_returns_none` |
+| TEST-82 | FUNC-01 | CON-05 | `src/main.py` モジュールが、tkinter以外のGUIフレームワーク（PyQt、Kivy等）をimportしていないことを確認する | `main` モジュールのソースをASTで解析し、`import`文を抽出する | `PyQt5`/`PyQt6`/`PySide2`/`PySide6`/`kivy`/`wx`/`pygame`のいずれも起点とするimportが存在しない。`tkinter`を起点とするimportは存在する | `test_82_main_module_does_not_import_gui_frameworks_other_than_tkinter` |
+| TEST-83 | FUNC-01 | CON-06 | テスト実行環境のOSがWindowsであることを確認する（環境確認テスト。7.0節・7.2節参照） | `platform.system()` を確認する | 戻り値が `"Windows"` | `test_83_execution_environment_is_windows` |
+| TEST-84 | FUNC-01 | CON-07 | テスト実行環境がPython 3.11であることを確認する（環境確認テスト。7.0節・7.2節参照） | `sys.version_info[:2]` を確認する | 戻り値が `(3, 11)` | `test_84_execution_environment_is_python_311` |
+
+### 7.2 補足
+
+- 本節のテストはすべて、`main` モジュール内の `tk`（`tkinter` モジュール参照）・
+  `GameLogic`・`MainWindow` の3つの名前を `monkeypatch` で差し替えた上で行う（TEST-82は
+  ソース解析のみのためこの差し替えを必要としない）。差し替えは `tk.Tk` クラスそのもの・
+  `GameLogic` クラスそのもの・`MainWindow` クラスそのものではなく、`main` モジュールの
+  名前空間上の参照のみを対象とするため、他のテストモジュール（`test_board_view.py` 等）が
+  独自に保持する `tk` 参照や、`tests/test_main_window.py` が使う実際の `MainWindow` には
+  一切影響しない（`monkeypatch` フィクスチャによりテスト関数終了時に自動的に元へ戻される
+  点も含め、テスト間の独立性が保たれる）。
+- TEST-83・TEST-84（CON-06・CON-07の環境確認テスト）は、あくまで「本テストを実行している
+  環境がCON-06・CON-07の前提を満たしているかどうか」を確認するものであり、`main()` や他の
+  いずれの関数も実行時にOS・Pythonバージョンを判定・分岐するロジックを持たない（そのような
+  ロジックは関数設計書上も要求されていない）。したがって、これらのテストが通ることは
+  「実装がCON-06・CON-07を動的に強制していること」の証明にはならず、「本プロジェクトが
+  想定する実行環境（`py -3.11`、Windows）で実際にテストが実行されたこと」の記録・確認と
+  いう性質のものである点に留意する。CI環境や別のOS・Pythonバージョンでこれらのテストのみを
+  切り離して実行した場合、実装に問題がなくても失敗しうる（環境依存のテストである）。
+- REQ-02はTEST-76〜TEST-81（起動処理の生成・呼び出し順序・戻り値の一連の確認）で、CON-05は
+  TEST-82（tkinter以外のGUIフレームワーク非依存の直接確認）で、CON-06はTEST-83で、CON-07は
+  TEST-84で、それぞれ検証する。これにより、これまでCOMP-01のテストが存在しなかったために
+  `docs/traceability_matrix.md` の④要件×テスト対応表で空欄だったCON-06・CON-07の行が
+  埋まる。
