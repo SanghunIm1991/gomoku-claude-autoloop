@@ -133,7 +133,7 @@ def recorder(monkeypatch):
 
 def test_76_main_creates_tk_root_exactly_once(recorder):
     """TEST-76: main()呼び出しにより、tk.Tk相当のルートウィンドウが1回だけ生成される
-    ことを確認する。対応関数ID: FUNC-01。
+    ことを確認する。対応関数ID: FUNC-01。対応要件ID: REQ-02。
     """
     main_module.main()
     assert len(recorder.tk_instances) == 1
@@ -142,6 +142,7 @@ def test_76_main_creates_tk_root_exactly_once(recorder):
 def test_77_main_creates_game_logic_instance_exactly_once(recorder):
     """TEST-77: main()呼び出しにより、GameLogicのインスタンスが1回だけ生成され、それが
     実際のGameLogicインスタンスであることを確認する。対応関数ID: FUNC-01。
+    対応要件ID: REQ-02。
     """
     main_module.main()
     assert len(recorder.game_logic_instances) == 1
@@ -151,7 +152,7 @@ def test_77_main_creates_game_logic_instance_exactly_once(recorder):
 def test_78_main_creates_main_window_once_with_root_and_game_logic(recorder):
     """TEST-78: main()呼び出しにより、MainWindowが、生成されたtk.Tk相当のroot・
     GameLogicインスタンスの両方を(root, game_logic)の順序で引数として1回だけ生成される
-    ことを確認する。対応関数ID: FUNC-01。
+    ことを確認する。対応関数ID: FUNC-01。対応要件ID: REQ-02。
     """
     main_module.main()
     assert len(recorder.main_window_instances) == 1
@@ -162,7 +163,7 @@ def test_78_main_creates_main_window_once_with_root_and_game_logic(recorder):
 
 def test_79_main_calls_root_mainloop_once(recorder):
     """TEST-79: main()呼び出しにより、生成されたrootのmainloop()が1回だけ呼ばれること
-    を確認する。対応関数ID: FUNC-01。
+    を確認する。対応関数ID: FUNC-01。対応要件ID: REQ-02。
     """
     main_module.main()
     assert recorder.tk_instances[0].mainloop_call_count == 1
@@ -170,7 +171,7 @@ def test_79_main_calls_root_mainloop_once(recorder):
 
 def test_80_main_executes_steps_in_correct_order(recorder):
     """TEST-80: main()内の各処理が「tk.Tk生成→GameLogic生成→MainWindow生成→mainloop
-    開始」の順序で実行されることを確認する。対応関数ID: FUNC-01。
+    開始」の順序で実行されることを確認する。対応関数ID: FUNC-01。対応要件ID: REQ-02。
     """
     main_module.main()
     assert recorder.order == ["tk", "game_logic", "main_window", "mainloop"]
@@ -178,7 +179,7 @@ def test_80_main_executes_steps_in_correct_order(recorder):
 
 def test_81_main_returns_none(recorder):
     """TEST-81: main()の戻り値がNoneであることを確認する（関数設計書FUNC-01の出力仕様）。
-    対応関数ID: FUNC-01。
+    対応関数ID: FUNC-01。対応要件ID: REQ-02。
     """
     result = main_module.main()
     assert result is None
@@ -188,6 +189,7 @@ def test_82_main_module_does_not_import_gui_frameworks_other_than_tkinter():
     """TEST-82: src/main.pyモジュールが、tkinter以外のGUIフレームワーク（PyQt、Kivy等）を
     importしていないことを確認する（CON-05）。tests/test_game_logic.pyのTEST-31と同様に、
     ソースをASTで解析してimport文を抽出する方法による。対応関数ID: FUNC-01。
+    対応要件ID: CON-05。
     """
     with open(main_module.__file__, "r", encoding="utf-8") as f:
         tree = ast.parse(f.read(), filename=main_module.__file__)
@@ -212,7 +214,7 @@ def test_83_execution_environment_is_windows():
     """TEST-83: テスト実行環境のOSがWindowsであることを確認する環境確認テスト（CON-06）。
     本テストはあくまでテスト実行環境がCON-06の前提を満たしていることの確認であり、main()
     自体がOSを動的に判定・強制していることの証明ではない（テスト仕様書7.2節の限界に関する
-    注記を参照）。対応関数ID: FUNC-01。
+    注記を参照）。対応関数ID: FUNC-01。対応要件ID: CON-06。
     """
     assert platform.system() == "Windows"
 
@@ -221,6 +223,6 @@ def test_84_execution_environment_is_python_311():
     """TEST-84: テスト実行環境がPython 3.11であることを確認する環境確認テスト（CON-07）。
     本テストはあくまでテスト実行環境がCON-07の前提を満たしていることの確認であり、main()
     自体がPythonバージョンを動的に判定・強制していることの証明ではない（テスト仕様書7.2節の
-    限界に関する注記を参照）。対応関数ID: FUNC-01。
+    限界に関する注記を参照）。対応関数ID: FUNC-01。対応要件ID: CON-07。
     """
     assert sys.version_info[:2] == (3, 11)
