@@ -10,7 +10,8 @@
 
 テスト工程はコンポーネント単位で分割して進め、本書は単一ファイルとして工程が進むたびに
 コンポーネント節を追記していく（`docs/traceability_matrix.md` と同様の運用方針）。現時点では
-COMP-02（ゲームロジック層）・COMP-04（盤面表示層）の節を収録する。
+COMP-02（ゲームロジック層）・COMP-04（盤面表示層）・COMP-05（ステータス表示・操作パネル層）の
+節を収録する。
 
 ## 1. ID採番方針
 
@@ -29,6 +30,7 @@ COMP-02（ゲームロジック層）・COMP-04（盤面表示層）の節を収
 |---|---|---|
 | TESTMOD-01 | `tests/test_game_logic.py` | COMP-02 |
 | TESTMOD-02 | `tests/test_board_view.py` | COMP-04 |
+| TESTMOD-03 | `tests/test_status_panel.py` | COMP-05 |
 
 `tests/` から `src/` 配下のモジュールをimportできるよう、プロジェクト直下に `conftest.py` を
 配置し、`sys.path` に `src` ディレクトリを追加している。
@@ -184,3 +186,68 @@ COMP-02（ゲームロジック層）・COMP-04（盤面表示層）の節を収
   流れ）で、REQ-13はTEST-36（リスタート時の盤面クリアに相当する `draw_empty_board()` による
   石の消去）で、CON-04はTEST-37・TEST-38（黒・白2色の描画）で、それぞれ検証する。NFR-04は
   TEST-37・TEST-46（実際の描画処理の体感遅延なしでの完了）で検証する。
+
+## 5. COMP-05（ステータス表示・操作パネル層）節
+
+### 5.0 対象・方針
+
+- 対象コンポーネント: COMP-05 ステータス表示・操作パネル（`StatusPanel` クラス、`src/status_panel.py`）
+- 対応する関数ID: FUNC-19〜FUNC-23（関数設計書 4.5節）
+- 対応する要件ID: REQ-10, REQ-11, REQ-12, REQ-13, NFR-04, CON-04, CON-05
+- 方針: COMP-05は実際に `tk.Label` / `tk.Button` を生成して表示・操作を行うGUI層のコンポーネント
+  であるため、`tests/test_status_panel.py` では実際に `tkinter.Tk()`（ルートウィンドウ）を生成し、
+  `root.withdraw()` により非表示化した上で、その配下に `StatusPanel` を構築して検証する。
+  `tk.Tk()` の生成は、COMP-04節（4.0節）と同じ理由（Tclライブラリファイルの再読み込みに起因する
+  一時的なファイル読み込みエラーの散発を避けるため）により、`tests/test_board_view.py` の
+  `tk_root` fixtureと同様にモジュール内で1つの `Tk` インスタンスを共有する構成
+  （`scope="module"` のfixture）とし、本テストモジュールの全テスト終了後に `root.destroy()` を
+  1回呼び出して破棄する。各テストで検証対象となる `StatusPanel` インスタンスは、テスト関数単位で
+  新しい親フレーム（`tk.Frame`）を生成した上でその配下に構築し、テスト終了後に `frame.destroy()`
+  で破棄する（テスト間でのウィジェット・リソースのリーク防止）。検証は、`StatusPanel` が内部で
+  保持するウィジェット（`_status_label`, `_restart_button`）に対して `cget()` を用いて表示テキスト・
+  ウィジェット種別・ボタン設定を直接調べる方法、およびリスタートボタンの押下を模擬するために
+  `tkinter.Button.invoke()`（`command` に設定された関数を実行する標準の方法）を用いる、
+  COMP-04節（4.0節）と同様のホワイトボックステストの手法を用いる。
+
+### 5.1 テストケース一覧
+
+| テストID | テスト対象(関数ID) | 対応要件ID | 目的 | 入力/前提条件 | 期待結果 | 対応テスト関数名 |
+|---|---|---|---|---|---|---|
+| TEST-47 | FUNC-19 | REQ-10, REQ-11, REQ-12, REQ-13, CON-05 | 初期化により、ステータス表示用Labelとリスタート用Button（text="リスタート"）がparent配下に生成されることを確認する | `tk.Frame` を親として `StatusPanel(frame, on_restart_click)` を生成した直後 | `panel._status_label` が `tk.Label` のインスタンスである。`panel._restart_button` が `tk.Button` のインスタンスである。`panel._restart_button.cget("text") == "リスタート"` | `test_47_init_creates_label_and_restart_button` |
+| TEST-48 | FUNC-19 | REQ-13, CON-05 | 初期化時、Buttonのcommandに `_on_restart_button_click` が設定されていることを確認する（commandが空でないことをもって確認） | `StatusPanel(frame, on_restart_click)` を生成した直後 | `panel._restart_button.cget("command")` が空文字列でない（Tclコマンド名が返り、commandが設定されていることを示す） | `test_48_init_sets_restart_button_command` |
+| TEST-49 | FUNC-20 | REQ-12, CON-04 | `show_turn('black')` 呼び出しでLabelに「黒の番です」が表示されることを確認する | `StatusPanel` 生成後、`show_turn('black')` を呼び出す | `panel._status_label.cget("text") == "黒の番です"` | `test_49_show_turn_black_displays_black_turn_text` |
+| TEST-50 | FUNC-20 | REQ-12, CON-04 | `show_turn('white')` 呼び出しでLabelに「白の番です」が表示されることを確認する | `StatusPanel` 生成後、`show_turn('white')` を呼び出す | `panel._status_label.cget("text") == "白の番です"` | `test_50_show_turn_white_displays_white_turn_text` |
+| TEST-51 | FUNC-21 | REQ-10, CON-04 | `show_winner('black')` 呼び出しでLabelに「黒の勝ちです」が表示されることを確認する | `StatusPanel` 生成後、`show_winner('black')` を呼び出す | `panel._status_label.cget("text") == "黒の勝ちです"` | `test_51_show_winner_black_displays_black_win_text` |
+| TEST-52 | FUNC-21 | REQ-10, CON-04 | `show_winner('white')` 呼び出しでLabelに「白の勝ちです」が表示されることを確認する | `StatusPanel` 生成後、`show_winner('white')` を呼び出す | `panel._status_label.cget("text") == "白の勝ちです"` | `test_52_show_winner_white_displays_white_win_text` |
+| TEST-53 | FUNC-22 | REQ-11 | `show_draw()` 呼び出しでLabelに「引き分けです」が表示されることを確認する | `StatusPanel` 生成後、`show_draw()` を呼び出す | `panel._status_label.cget("text") == "引き分けです"` | `test_53_show_draw_displays_draw_text` |
+| TEST-54 | FUNC-23 | REQ-13 | リスタートボタンを `invoke()` すると、コンストラクタで渡した `on_restart_click` コールバックが1回呼ばれることを確認する | `StatusPanel` 生成後、`panel._restart_button.invoke()` を1回呼び出す | `on_restart_click` コールバックの呼び出し回数が1 | `test_54_restart_button_invoke_calls_on_restart_click_once` |
+| TEST-55 | FUNC-23 | REQ-13 | リスタートボタンを複数回 `invoke()` すると、その都度 `on_restart_click` コールバックが呼ばれることを確認する（境界値） | `StatusPanel` 生成後、`panel._restart_button.invoke()` を3回連続で呼び出す | `on_restart_click` コールバックの呼び出し回数が3 | `test_55_restart_button_invoke_multiple_times_calls_callback_each_time` |
+| TEST-56 | FUNC-20, FUNC-21, FUNC-22 | REQ-10, REQ-11, REQ-12, REQ-13 | 手番表示→勝敗表示→引き分け表示→手番表示、と複数回呼び出した際に、常に最後の呼び出し内容がLabelに反映されることを確認する（表示遷移の確認。最後の手番表示への呼び出しはリスタート後にCOMP-03が `show_turn('black')` を呼び出す想定の遷移に相当する） | `StatusPanel` 生成後、`show_turn('black')` → `show_turn('white')` → `show_winner('white')` → `show_draw()` → `show_turn('black')` の順に呼び出す | 各呼び出し直後のLabelテキストが順に「黒の番です」「白の番です」「白の勝ちです」「引き分けです」「黒の番です」となる | `test_56_display_transitions_reflect_latest_call` |
+| TEST-57 | FUNC-20 | NFR-04 | 手番表示更新処理（`show_turn`）を盤面全マス相当（225回）呼び出しても体感遅延なく完了する目安（1秒未満）を満たすことを確認する | `StatusPanel` 生成後、`show_turn(color)` を225回呼び出す（色は黒/白を交互指定） | 225回分の合計実行時間が1秒未満 | `test_57_many_show_turn_calls_complete_without_noticeable_delay` |
+
+### 5.2 補足
+
+- TEST-47〜TEST-57はいずれも、実際に `tk.Tk()` を生成し `root.withdraw()` で非表示化した上で
+  `StatusPanel` を構築し、ウィジェットの実際の状態（`cget()` で取得できるテキスト・設定値）を
+  検証する（5.0節参照）。`conftest.py` は `sys.path` への `src` 追加のみを行いGUI関連の初期化は
+  行わないため、`import tkinter` および `tk.Tk()` の呼び出しは `tests/test_status_panel.py` 側で
+  行う。
+- TEST-48（Buttonの `command` 設定確認）は、`tests/test_board_view.py` のTEST-33（Canvasの
+  `<Button-1>` バインド確認）と同様に、tkinter内部のTclコマンド名が空でないことをもって
+  「commandが設定されている」ことの間接的な確認とする。commandが実際に `_on_restart_button_click`
+  （ひいては呼び出し元の `on_restart_click`）を呼び出すことの機能的な確認は、TEST-54・TEST-55
+  （`invoke()` によるコールバック呼び出しの直接確認）で行う。
+- TEST-49・TEST-50（`show_turn`）およびTEST-51・TEST-52（`show_winner`）は、`color` 引数が
+  取りうる値（`'black'`／`'white'`）の2パターンをすべて網羅している。関数設計書FUNC-20・
+  FUNC-21の記述のとおり、`'black'`／`'white'` 以外の値が渡されることは呼び出し契約上想定しない
+  ため、値チェックに関する異常系テストは設けない。
+- TEST-56は、FUNC-19〜FUNC-23の個々の単体テストとは別に、`StatusPanel` を複数回にわたって
+  呼び出した際に表示状態が正しく最新の呼び出し内容に更新されること（内部状態を持たずLabelの
+  テキストのみで表示を管理する設計が、連続した呼び出しに対しても矛盾なく機能すること）を
+  確認するために設けている。
+- REQ-10は主にTEST-51・TEST-52（`show_winner`）で、REQ-11は主にTEST-53（`show_draw`）で、
+  REQ-12は主にTEST-49・TEST-50（`show_turn`）で、REQ-13は主にTEST-47・TEST-48・TEST-54・
+  TEST-55（リスタートボタンの生成・押下）およびTEST-56（リスタート後の手番表示への復帰に
+  相当する遷移）で、CON-04はTEST-49〜TEST-52（黒・白2色のテキスト表示）で、CON-05はTEST-47・
+  TEST-48（tkinterウィジェット（`tk.Label`／`tk.Button`）としての生成確認）で、それぞれ検証する。
+  NFR-04はTEST-57（表示更新処理の体感遅延なしでの完了）で検証する。
