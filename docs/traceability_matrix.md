@@ -85,13 +85,13 @@ TESTMOD-04 = `tests/test_main_window.py`（COMP-03対応）。テストケース
 | 要件ID | TESTMOD-01 | TESTMOD-02 | TESTMOD-03 | TESTMOD-04 |
 |---|---|---|---|---|
 | REQ-01 | TEST-01, TEST-02, TEST-03 | TEST-32, TEST-34, TEST-35 | | |
-| REQ-02 | TEST-01 | TEST-32, TEST-34, TEST-35 | | TEST-60, TEST-61, TEST-69 |
+| REQ-02 | TEST-01 | TEST-32, TEST-34, TEST-35 | | TEST-58, TEST-60, TEST-61, TEST-69 |
 | REQ-03（欠番・REQ-12に統合） | | | | |
 | REQ-04 | TEST-04, TEST-05, TEST-06, TEST-07, TEST-12 | TEST-33, TEST-37, TEST-38, TEST-39, TEST-40, TEST-41, TEST-42, TEST-43, TEST-44, TEST-45 | | TEST-59, TEST-63, TEST-64, TEST-65, TEST-66, TEST-67, TEST-70 |
 | REQ-05 | TEST-04, TEST-05, TEST-19, TEST-22 | | | TEST-63, TEST-64, TEST-65, TEST-66, TEST-70 |
 | REQ-06 | TEST-08, TEST-29 | | | TEST-62, TEST-71 |
 | REQ-07 | TEST-09, TEST-10, TEST-11, TEST-19, TEST-29 | | | TEST-62, TEST-72 |
-| REQ-08 | TEST-13, TEST-14, TEST-15, TEST-16, TEST-17, TEST-18, TEST-19, TEST-28 | | | |
+| REQ-08 | TEST-13, TEST-14, TEST-15, TEST-16, TEST-17, TEST-18, TEST-19, TEST-28 | | | TEST-63, TEST-64, TEST-72 |
 | REQ-09 | TEST-20, TEST-21, TEST-22 | | | TEST-65, TEST-73 |
 | REQ-10 | | | TEST-51, TEST-52, TEST-56 | TEST-63, TEST-64, TEST-72 |
 | REQ-11 | | | TEST-53, TEST-56 | TEST-65, TEST-73 |
@@ -145,8 +145,8 @@ REQ-12, REQ-13, NFR-04, NFR-05, CON-03, CON-05を検証対象とする
 今後も空欄のままとなる。REQ-08・REQ-09（勝敗判定・引き分け判定ロジックそのもの）はCOMP-02の
 責務、CON-04（黒・白2色の描画）はCOMP-02/COMP-04/COMP-05の責務であり、いずれもCOMP-03の
 公式な対応要件ではないためCOMP-03のテストモジュールでは検証対象外だが、TESTMOD-04では
-これらの判定結果・性質を受けた表示分岐の確認において間接的に利用しており、REQ-09・CON-04の
-行にはTESTMOD-04のテストIDが記載されている（詳細は`docs/04_test/test_specification.md`
+これらの判定結果・性質を受けた表示分岐の確認において間接的に利用しており、REQ-08・REQ-09・
+CON-04の行にはTESTMOD-04のテストIDが記載されている（詳細は`docs/04_test/test_specification.md`
 6.2節を参照）。REQ-01, CON-01, CON-02,
 CON-06, CON-07はCOMP-03の対応要件外またはGUI表示・実行環境そのものに関する制約でありCOMP-03
 単体テストでは直接検証しない。
