@@ -135,16 +135,19 @@ COMP-05が対応する要件のうちREQ-10, REQ-11, REQ-12, REQ-13, NFR-04, CON
 しない。
 
 TESTMOD-04（`tests/test_main_window.py`、COMP-03対応）は、コンポーネント設計書・関数設計書上
-COMP-03が対応する要件のうちREQ-02, REQ-04, REQ-05, REQ-06, REQ-07, REQ-09, REQ-10, REQ-11,
-REQ-12, REQ-13, NFR-04, NFR-05, CON-03, CON-04, CON-05を検証対象とする
+COMP-03が対応する要件のうちREQ-02, REQ-04, REQ-05, REQ-06, REQ-07, REQ-10, REQ-11,
+REQ-12, REQ-13, NFR-04, NFR-05, CON-03, CON-05を検証対象とする
 （`docs/04_test/test_specification.md` 6.0節参照）。COMP-03はGUI層の中でCOMP-02（ロジック層）
 を呼び出す唯一のコンポーネントであるため、スタブの`game_logic`を用いた単体テスト（自身の
 分岐ロジックの検証）と、実際の`GameLogic`を用いた結合テスト（COMP-02〜COMP-05の結合動作の
 確認）を組み合わせている。これによりREQ-10・REQ-11・REQ-12の行にTESTMOD-03に続きTESTMOD-04の
 テストIDが追加され、TESTMOD-01・TESTMOD-02の当該行の空欄はCOMP-02/COMP-04の責務外として
-今後も空欄のままとなる。REQ-08（勝敗判定ロジックそのもの）はCOMP-02の責務でありCOMP-03の
-テストモジュールでは検証対象外（TESTMOD-04ではREQ-08の判定結果を受けた表示分岐の確認に
-とどまる。詳細は`docs/04_test/test_specification.md` 6.2節を参照）。REQ-01, CON-01, CON-02,
+今後も空欄のままとなる。REQ-08・REQ-09（勝敗判定・引き分け判定ロジックそのもの）はCOMP-02の
+責務、CON-04（黒・白2色の描画）はCOMP-02/COMP-04/COMP-05の責務であり、いずれもCOMP-03の
+公式な対応要件ではないためCOMP-03のテストモジュールでは検証対象外だが、TESTMOD-04では
+これらの判定結果・性質を受けた表示分岐の確認において間接的に利用しており、REQ-09・CON-04の
+行にはTESTMOD-04のテストIDが記載されている（詳細は`docs/04_test/test_specification.md`
+6.2節を参照）。REQ-01, CON-01, CON-02,
 CON-06, CON-07はCOMP-03の対応要件外またはGUI表示・実行環境そのものに関する制約でありCOMP-03
 単体テストでは直接検証しない。
 

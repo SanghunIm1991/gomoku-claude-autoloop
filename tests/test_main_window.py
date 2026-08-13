@@ -231,7 +231,7 @@ def test_61_show_initial_state_does_not_query_game_logic(make_main_window):
     """TEST-61: 初期表示が、game_logicへの問い合わせ（make_move/restart）を一切行わずに
     行われる。
 
-    対応要件ID: REQ-02
+    対応要件ID: REQ-02, NFR-05
     テスト対象(関数ID): FUNC-11
     """
     stub = _StubGameLogic()
@@ -306,7 +306,7 @@ def test_65_on_board_click_draw_draws_stone_and_shows_draw(make_main_window):
     """TEST-65: 着手により引き分けが確定した場合、盤面に石が描画され、StatusPanelに
     引き分け表示がされる。
 
-    対応要件ID: REQ-04, REQ-05, REQ-09, REQ-11
+    対応要件ID: REQ-04, REQ-05, REQ-09, REQ-11, CON-04
     テスト対象(関数ID): FUNC-12
     """
     move_result = MoveResult(

@@ -260,8 +260,9 @@ COMP-03（メインウィンドウ・GUIコントローラ層）の節を収録�
 - 対象コンポーネント: COMP-03 メインウィンドウ（GUIコントローラ、`MainWindow` クラス、
   `src/main_window.py`）
 - 対応する関数ID: FUNC-10〜FUNC-13（関数設計書 4.3節）
-- 対応する要件ID: REQ-02, REQ-04, REQ-05, REQ-06, REQ-07, REQ-09, REQ-10, REQ-11, REQ-12,
-  REQ-13, NFR-04, NFR-05, CON-03, CON-04, CON-05
+- 対応する要件ID: REQ-02, REQ-04, REQ-05, REQ-06, REQ-07, REQ-10, REQ-11, REQ-12,
+  REQ-13, NFR-04, NFR-05, CON-03, CON-05（REQ-08と同様に間接的に利用する要件として
+  REQ-09, CON-04がある。詳細は6.2節を参照）
 - 方針: COMP-03は、コンストラクタで受け取った `game_logic`（COMP-02 `GameLogic` の
   インスタンス）と、自身が内部で生成する `BoardView`（COMP-04）・`StatusPanel`（COMP-05）を
   仲介するGUIコントローラであり、GUI層の中でCOMP-02を呼び出す唯一のコンポーネントである
@@ -307,11 +308,11 @@ COMP-03（メインウィンドウ・GUIコントローラ層）の節を収録�
 | TEST-58 | FUNC-10 | REQ-02, CON-05 | `__init__` によりBoardView・StatusPanelが生成され、`self.board_view`・`self.status_panel`・`self.game_logic` として正しく保持されることを確認する | スタブの `game_logic` を渡して `MainWindow(root, stub_game_logic)` を生成した直後 | `window.board_view` が `BoardView` のインスタンスである。`window.status_panel` が `StatusPanel` のインスタンスである。`window.game_logic is stub_game_logic`（渡したインスタンスそのものであること） | `test_58_init_creates_and_holds_board_view_status_panel_game_logic` |
 | TEST-59 | FUNC-10 | REQ-04, REQ-13, CON-05 | `BoardView` には `on_board_click`、`StatusPanel` には `on_restart_click` がコールバックとして渡され、実際のクリック操作・ボタン押下によってそれぞれが呼び出されることを確認する | スタブの `game_logic` を渡して `MainWindow` を生成し、(a) `board_view._on_canvas_click`（擬似イベント）を呼び出す、(b) `status_panel._restart_button.invoke()` を呼び出す | (a) スタブの `make_move` が引数 `(7, 7)` で1回呼ばれる。(b) スタブの `restart` が1回呼ばれる | `test_59_init_wires_board_view_and_status_panel_callbacks_to_main_window` |
 | TEST-60 | FUNC-11 | REQ-02, REQ-12 | `MainWindow` 生成直後（コンストラクタ内で `_show_initial_state()` が呼ばれた結果）、実際の表示が空の盤面・黒番表示になっていることを確認する | スタブの `game_logic` を渡して `MainWindow` を生成した直後 | `board_view._canvas` 上にoval（石）が1つも存在しない。`status_panel._status_label.cget("text") == "黒の番です"` | `test_60_show_initial_state_displays_empty_board_and_black_turn` |
-| TEST-61 | FUNC-11 | REQ-02 | 初期表示が、`game_logic` への問い合わせ（`make_move`/`restart`）を一切行わずに行われることを確認する | 呼び出し回数を記録するスタブの `game_logic` を渡して `MainWindow` を生成した直後 | `stub_game_logic.make_move_calls` が空リスト。`stub_game_logic.restart_calls == 0` | `test_61_show_initial_state_does_not_query_game_logic` |
+| TEST-61 | FUNC-11 | REQ-02, NFR-05 | 初期表示が、`game_logic` への問い合わせ（`make_move`/`restart`）を一切行わずに行われることを確認する | 呼び出し回数を記録するスタブの `game_logic` を渡して `MainWindow` を生成した直後 | `stub_game_logic.make_move_calls` が空リスト。`stub_game_logic.restart_calls == 0` | `test_61_show_initial_state_does_not_query_game_logic` |
 | TEST-62 | FUNC-12 | REQ-06, REQ-07 | `make_move` の結果が `valid=False` の場合、`BoardView`・`StatusPanel` いずれにも更新指示が行われず、表示状態が変化しないことを確認する（異常系） | `valid=False` の `MoveResult` を返すスタブで `MainWindow` を生成し、`on_board_click(3, 3)` を呼び出す | 呼び出し前後で `board_view._canvas` のoval数が0のまま変化しない。`status_panel._status_label` のテキストが呼び出し前後で変化しない（初期状態の空文字のまま） | `test_62_on_board_click_invalid_result_does_not_update_board_or_status` |
 | TEST-63 | FUNC-12 | REQ-04, REQ-05, REQ-08, REQ-10, CON-04 | 着手により黒の勝利が確定した場合、盤面に黒石が描画され、StatusPanelに黒の勝利表示がされることを確認する | `valid=True, color='black', winner='black', is_draw=False, next_turn=None, game_over=True` の `MoveResult` を返すスタブで `on_board_click(7, 7)` を呼び出す | `board_view._canvas` に `(7,7)` 相当の位置・黒色のoval（石）が1つ描画される。`status_panel._status_label.cget("text") == "黒の勝ちです"` | `test_63_64_on_board_click_winner_draws_stone_and_shows_winner[black]` |
 | TEST-64 | FUNC-12 | REQ-04, REQ-05, REQ-08, REQ-10, CON-04 | 着手により白の勝利が確定した場合、盤面に白石が描画され、StatusPanelに白の勝利表示がされることを確認する（境界値: 黒・白の両方を網羅） | `valid=True, color='white', winner='white', is_draw=False, next_turn=None, game_over=True` の `MoveResult` を返すスタブで `on_board_click(2, 10)` を呼び出す | `board_view._canvas` に `(2,10)` 相当の位置・白色のoval（石）が1つ描画される。`status_panel._status_label.cget("text") == "白の勝ちです"` | `test_63_64_on_board_click_winner_draws_stone_and_shows_winner[white]` |
-| TEST-65 | FUNC-12 | REQ-04, REQ-05, REQ-09, REQ-11 | 着手により引き分けが確定した場合、盤面に石が描画され、StatusPanelに引き分け表示がされることを確認する | `valid=True, color='white', winner=None, is_draw=True, next_turn=None, game_over=True` の `MoveResult` を返すスタブで `on_board_click(14, 0)` を呼び出す | `board_view._canvas` に `(14,0)` 相当の位置・白色のoval（石）が1つ描画される。`status_panel._status_label.cget("text") == "引き分けです"` | `test_65_on_board_click_draw_draws_stone_and_shows_draw` |
+| TEST-65 | FUNC-12 | REQ-04, REQ-05, REQ-09, REQ-11, CON-04 | 着手により引き分けが確定した場合、盤面に石が描画され、StatusPanelに引き分け表示がされることを確認する | `valid=True, color='white', winner=None, is_draw=True, next_turn=None, game_over=True` の `MoveResult` を返すスタブで `on_board_click(14, 0)` を呼び出す | `board_view._canvas` に `(14,0)` 相当の位置・白色のoval（石）が1つ描画される。`status_panel._status_label.cget("text") == "引き分けです"` | `test_65_on_board_click_draw_draws_stone_and_shows_draw` |
 | TEST-66 | FUNC-12 | REQ-04, REQ-05, REQ-12 | 着手により対局が続行する場合（勝敗・引き分け未確定）、盤面に石が描画され、StatusPanelに次の手番表示がされることを確認する | `valid=True, color='black', winner=None, is_draw=False, next_turn='white', game_over=False` の `MoveResult` を返すスタブで `on_board_click(0, 5)` を呼び出す | `board_view._canvas` に `(0,5)` 相当の位置・黒色のoval（石）が1つ描画される。`status_panel._status_label.cget("text") == "白の番です"` | `test_66_on_board_click_continues_draws_stone_and_shows_next_turn` |
 | TEST-67 | FUNC-12 | REQ-04, NFR-05 | `on_board_click` に渡された `(row, col)` が、そのまま `game_logic.make_move(row, col)` に渡されることを確認する | 任意の有効な `MoveResult` を返すスタブで `on_board_click(9, 4)` を呼び出す | `stub_game_logic.make_move_calls == [(9, 4)]` | `test_67_on_board_click_calls_make_move_with_given_coordinates` |
 | TEST-68 | FUNC-13 | REQ-13, NFR-05 | `on_restart_click` が呼ばれると `game_logic.restart()` が呼ばれ、その戻り値の `next_turn` がそのまま `StatusPanel.show_turn` に渡され、盤面表示もクリアされることを確認する | `success=True, next_turn='white'`（実際の `RestartResult` は常に `next_turn='black'` だが、実装が値を決め打ちせず戻り値をそのまま使っていることを確認するためあえて `'white'` を返すスタブを使用）の `RestartResult` を返すスタブで、事前に `board_view.draw_stone` を直接呼び出し石を1つ描画した状態から `on_restart_click()` を呼び出す | `stub_game_logic.restart_calls == 1`。呼び出し後 `board_view._canvas` のoval数が0（石が消去されている）。`status_panel._status_label.cget("text") == "白の番です"`（スタブが返した `next_turn` がそのまま反映される） | `test_68_on_restart_click_calls_restart_and_reflects_returned_next_turn` |
@@ -345,17 +346,22 @@ COMP-03（メインウィンドウ・GUIコントローラ層）の節を収録�
   主にTEST-59・TEST-63〜TEST-67・TEST-70（クリックから着手依頼・盤面描画までの一連の流れ）
   で、REQ-05は主にTEST-63〜TEST-66・TEST-70（手番切り替え結果の表示反映）で、REQ-06は
   TEST-62・TEST-71（既着手マスへの無効クリック時に表示が変化しないこと）で、REQ-07は
-  TEST-62・TEST-72（対局終了後の無効クリック時に表示が変化しないこと）で、REQ-09・REQ-11は
+  TEST-62・TEST-72（対局終了後の無効クリック時に表示が変化しないこと）で、REQ-11は
   TEST-65・TEST-73（引き分け確定時の表示）で、REQ-10はTEST-63・TEST-64・TEST-72（勝敗確定
   時の表示）で、REQ-12はTEST-60・TEST-66・TEST-70（対局中の手番表示）で、REQ-13はTEST-59・
   TEST-68・TEST-74（リスタート依頼と表示の初期化）で、それぞれ検証する。NFR-04はTEST-75
   （on_board_click呼び出しの体感遅延なしでの完了）で、NFR-05はTEST-61・TEST-67・TEST-68
   （COMP-02への問い合わせが `make_move`/`restart` の戻り値のみを介して行われ、渡された引数
   や戻り値を決め打ちせず正しく使用していること）で、CON-03はTEST-70（同一ウィンドウ内での
-  交互クリックによる一連の対局進行）で、CON-04はTEST-63・TEST-64・TEST-65・TEST-72（黒・白
-  2色の石描画・勝敗表示）で、CON-05はTEST-58・TEST-59（tkinterウィジェット（`BoardView`・
-  `StatusPanel`）としての生成・保持確認）で、それぞれ検証する。
-- REQ-08は本来COMP-02（`GameLogic._check_win`）の責務であり、COMP-03単体としての検証対象
-  ではないが、TEST-63・TEST-64・TEST-72（勝敗確定という結果を受けた表示分岐の確認）は
-  間接的にREQ-08の結果を利用する形で記載している。REQ-08そのものの判定ロジックの網羅的な
-  検証はTESTMOD-01（COMP-02節、TEST-13〜TEST-18）を参照。
+  交互クリックによる一連の対局進行）で、CON-05はTEST-58・TEST-59（tkinterウィジェット
+  （`BoardView`・`StatusPanel`）としての生成・保持確認）で、それぞれ検証する。
+- REQ-08・REQ-09は本来COMP-02（`GameLogic._check_win`・`_is_board_full`等）の責務であり、
+  CON-04（黒・白2色の描画）は本来COMP-02/COMP-04/COMP-05の責務であって（コンポーネント
+  設計書5節の要件対応表参照）、いずれもCOMP-03単体としての公式な検証対象ではないが、
+  TEST-63・TEST-64・TEST-72（勝敗確定という結果を受けた表示分岐の確認）は間接的にREQ-08の
+  結果を、TEST-65・TEST-73（引き分け確定という結果を受けた表示分岐の確認）は間接的に
+  REQ-09の結果を、TEST-63・TEST-64・TEST-65・TEST-72（黒・白2色の石描画・勝敗表示の確認）
+  は間接的にCON-04の性質を、それぞれ利用する形で記載している。REQ-08・REQ-09そのものの
+  判定ロジックの網羅的な検証はTESTMOD-01（COMP-02節、REQ-08はTEST-13〜TEST-18、REQ-09は
+  TEST-20〜TEST-22）を、CON-04（黒白2色描画）そのものの網羅的な検証はTESTMOD-02（COMP-04節、
+  TEST-37・TEST-38）・TESTMOD-03（COMP-05節、TEST-49〜TEST-52）を参照。
