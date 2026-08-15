@@ -158,7 +158,7 @@ COMP-03（メインウィンドウ・GUIコントローラ層）・COMP-01（エ
 | TEST-37 | FUNC-16 | REQ-04, CON-04, NFR-04 | 指定行・列インデックスに対応する交点に指定色（黒・白）で塗りつぶした円が描画されることを確認する | `draw_stone(7, 7, 'black')` および `draw_stone(3, 10, 'white')` を呼び出す | (7,7)黒: 生成された `oval` の `coords` が `(284, 284, 316, 316)`（中心 (300,300)、半径16）、`itemcget('fill') == 'black'`。(3,10)白: `coords` が `(404, 124, 436, 156)`（中心 (420,140)、半径16）、`itemcget('fill') == 'white'` | `test_37_draw_stone_draws_circle_of_specified_color_at_cell_center` |
 | TEST-38 | FUNC-16 | REQ-04, CON-02, CON-04 | 盤面四隅の交点 `(0,0)`・`(14,14)` への石描画が正しい位置（交点座標）に行われることを確認する（境界値） | `draw_stone(0, 0, 'black')` と `draw_stone(14, 14, 'white')` を呼び出す | `(0,0)`: `coords` が `(4, 4, 36, 36)`（中心 (20,20)）。`(14,14)`: `coords` が `(564, 564, 596, 596)`（中心 (580,580)） | `test_38_draw_stone_at_board_corners_top_left_and_bottom_right` |
 | TEST-85 | FUNC-16 | NFR-06 | 石の輪郭線（`outline`）が、塗りつぶし色（黒・白）に関わらず常に黒色で描画されることを確認する（白石が盤面背景色（白）と同化せず判別可能であることの回帰防止テスト） | `draw_stone(5, 5, 'black')` と `draw_stone(9, 9, 'white')` を呼び出す | いずれの `oval` も `itemcget('outline') == 'black'` | `test_85_draw_stone_outline_is_always_black_regardless_of_fill_color` |
-| TEST-86 | FUNC-15, FUNC-16 | REQ-04 | `draw_stone()` が算出する石の中心座標が、`draw_empty_board()` が描画する格子線の交点座標の集合と一致することを確認する（石の交点配置の回帰防止テスト） | `draw_empty_board()` 呼び出し後の格子線座標から交点座標の集合を求め、`(0,0), (7,7), (14,14), (3,10), (10,3)` に `draw_stone(row, col, 'black')` を呼び出す | 各 `oval` の中心座標（`coords` から算出）が、格子線から求めた交点座標の集合にすべて含まれる | `test_86_draw_stone_center_matches_draw_empty_board_grid_intersections` |
+| TEST-86 | FUNC-15, FUNC-16 | REQ-01, REQ-04 | `draw_stone()` が算出する石の中心座標が、`draw_empty_board()` が描画する格子線の交点座標の集合と一致することを確認する（石の交点配置の回帰防止テスト） | `draw_empty_board()` 呼び出し後の格子線座標から交点座標の集合を求め、`(0,0), (7,7), (14,14), (3,10), (10,3)` に `draw_stone(row, col, 'black')` を呼び出す | 各 `oval` の中心座標（`coords` から算出）が、格子線から求めた交点座標の集合にすべて含まれる | `test_86_draw_stone_center_matches_draw_empty_board_grid_intersections` |
 | TEST-39 | FUNC-17 | REQ-04, CON-02 | マス目の境界線ちょうどのピクセル座標は、整数除算の切り捨てにより下側・右側に隣接するマスに属すると判定されることを確認する（境界値） | `_pixel_to_cell(x, y)` に `(40, 0)`, `(0, 40)`, `(40, 40)` を渡す | `(40,0) -> (0,1)`。`(0,40) -> (1,0)`。`(40,40) -> (1,1)`（いずれも境界線を挟んで手前のマス `(0,0)` ではなく、次のマスに属する） | `test_39_pixel_to_cell_boundary_falls_to_next_cell` |
 | TEST-40 | FUNC-17 | REQ-04, CON-02 | 盤面左上端のピクセル `(0, 0)` が `(0, 0)` セルに対応することを確認する（境界値） | `_pixel_to_cell(0, 0)` | 戻り値が `(0, 0)` | `test_40_pixel_to_cell_top_left_pixel_is_cell_0_0` |
 | TEST-41 | FUNC-17 | REQ-04, CON-02 | 盤面右下端の最終ピクセル（`BOARD_PIXEL_SIZE - 1` = 599）が `(14, 14)` セルに対応し、範囲内の値を返すことを確認する（境界値） | `_pixel_to_cell(599, 599)` | 戻り値が `(14, 14)` | `test_41_pixel_to_cell_last_pixel_is_cell_14_14` |
@@ -187,7 +187,8 @@ COMP-03（メインウィンドウ・GUIコントローラ層）・COMP-01（エ
   採用している。盤面範囲外座標に対するFUNC-17（`_pixel_to_cell`）自体の`None`判定の網羅性は
   TEST-42・TEST-43で別途検証済みのため、TEST-45では代表的な2パターン（ちょうど等しい座標・
   負の座標）のみを確認する。
-- REQ-01・REQ-02・CON-02は主にTEST-32・TEST-34・TEST-35（Canvasサイズ・初期格子線描画）で、
+- REQ-01・REQ-02・CON-02は主にTEST-32・TEST-34・TEST-35・TEST-86（Canvasサイズ・初期格子線描画、
+  および石の交点配置がREQ-01の格子概念に基づくことの確認）で、
   REQ-04は主にTEST-33・TEST-37〜TEST-45・TEST-86（クリック→座標変換→石描画・コールバック通知の
   一連の流れ、および石の交点配置）で、REQ-13はTEST-36（リスタート時の盤面クリアに相当する
   `draw_empty_board()` による石の消去）で、CON-04はTEST-37・TEST-38（黒・白2色の描画）で、
@@ -200,7 +201,10 @@ COMP-03（メインウィンドウ・GUIコントローラ層）・COMP-01（エ
   期待するアイテム数・座標を新仕様（30本・交点座標）に更新し、`draw_stone()`（FUNC-16）の輪郭線
   （`outline`）を色に関わらず黒固定で描画するNFR-06対応の回帰防止としてTEST-85を、石の中心座標が
   格子線の交点座標と数値的に一致することの回帰防止としてTEST-86を、それぞれ新規に追加した
-  （由来: レビュー指摘ベース）。
+  （由来: 仕様/設計ベース。改訂済みの関数設計書FUNC-15・FUNC-16・NFR-06の仕様に基づいて追加した
+  テストであり、いずれのレビューラウンドも「このテストが必要」と直接指摘したわけではないため、
+  `test-strategy`スキルの分類上は仕様/設計ベースに該当する。一連の修正自体の発端は独立レビューの
+  指摘ではなく配布後のユーザー報告である点は`docs/qa_log.md`参照）。
 
 ## 5. COMP-05（ステータス表示・操作パネル層）節
 

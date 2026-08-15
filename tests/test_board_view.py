@@ -229,7 +229,7 @@ def test_86_draw_stone_center_matches_draw_empty_board_grid_intersections(board_
     """TEST-86: draw_stone()が算出する石の中心座標が、draw_empty_board()が描画する格子線の
     交点座標の集合と一致する(石の交点配置(NFR-06関連不具合)の回帰防止テスト)。
 
-    対応要件ID: REQ-04
+    対応要件ID: REQ-01, REQ-04
     テスト対象(関数ID): FUNC-15, FUNC-16
     """
     view, _calls = board_view
