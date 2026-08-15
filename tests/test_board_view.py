@@ -19,7 +19,7 @@ import types
 import pytest
 import tkinter as tk
 
-from board_view import BOARD_CELLS, BOARD_PIXEL_SIZE, CELL_SIZE, BoardView
+from board_view import BOARD_CELLS, BOARD_PIXEL_SIZE, CELL_SIZE, BoardView, _GRID_MARGIN
 
 
 # ---------------------------------------------------------------------------
@@ -91,7 +91,7 @@ def test_34_init_calls_draw_empty_board_and_draws_grid_lines_only(board_view):
     view, _calls = board_view
     canvas = view._canvas
     items = canvas.find_all()
-    assert len(items) == 32
+    assert len(items) == BOARD_CELLS * 2
     for item in items:
         assert canvas.type(item) == "line"
     assert all(canvas.type(item) != "oval" for item in items)
@@ -102,7 +102,8 @@ def test_34_init_calls_draw_empty_board_and_draws_grid_lines_only(board_view):
 # ---------------------------------------------------------------------------
 
 def test_35_draw_empty_board_draws_grid_lines_with_correct_coordinates(board_view):
-    """TEST-35: draw_empty_board()により、15x15マス分の格子線が正しい座標で描画される。
+    """TEST-35: draw_empty_board()により、15本×15本(計30本)の格子線が、交点座標
+    (_GRID_MARGIN起点、CELL_SIZE間隔で並ぶ交点と交点の間のみを結ぶ)で正しく描画される。
 
     対応要件ID: REQ-01, REQ-02, CON-02
     テスト対象(関数ID): FUNC-15
@@ -115,11 +116,19 @@ def test_35_draw_empty_board_draws_grid_lines_with_correct_coordinates(board_vie
     items = canvas.find_all()
     actual_coords = {tuple(int(v) for v in canvas.coords(item)) for item in items}
 
-    expected_h = {(0, i * CELL_SIZE, BOARD_PIXEL_SIZE, i * CELL_SIZE) for i in range(BOARD_CELLS + 1)}
-    expected_v = {(i * CELL_SIZE, 0, i * CELL_SIZE, BOARD_PIXEL_SIZE) for i in range(BOARD_CELLS + 1)}
+    first = _GRID_MARGIN
+    last = _GRID_MARGIN + (BOARD_CELLS - 1) * CELL_SIZE
+    expected_h = {
+        (first, _GRID_MARGIN + i * CELL_SIZE, last, _GRID_MARGIN + i * CELL_SIZE)
+        for i in range(BOARD_CELLS)
+    }
+    expected_v = {
+        (_GRID_MARGIN + i * CELL_SIZE, first, _GRID_MARGIN + i * CELL_SIZE, last)
+        for i in range(BOARD_CELLS)
+    }
     expected = expected_h | expected_v
 
-    assert len(items) == 32
+    assert len(items) == BOARD_CELLS * 2
     assert actual_coords == expected
     assert all(canvas.type(item) != "oval" for item in items)
 
@@ -142,7 +151,7 @@ def test_36_draw_empty_board_clears_existing_stones(board_view):
     view.draw_empty_board()
 
     items_after = canvas.find_all()
-    assert len(items_after) == 32
+    assert len(items_after) == BOARD_CELLS * 2
     assert all(canvas.type(item) == "line" for item in items_after)
     ovals_after = [item for item in items_after if canvas.type(item) == "oval"]
     assert len(ovals_after) == 0
@@ -153,7 +162,7 @@ def test_36_draw_empty_board_clears_existing_stones(board_view):
 # ---------------------------------------------------------------------------
 
 def test_37_draw_stone_draws_circle_of_specified_color_at_cell_center(board_view):
-    """TEST-37: 指定マスの中心に指定色(黒・白)で塗りつぶした円が描画される。
+    """TEST-37: 指定行・列インデックスに対応する交点に指定色(黒・白)で塗りつぶした円が描画される。
 
     対応要件ID: REQ-04, CON-04, NFR-04
     テスト対象(関数ID): FUNC-16
@@ -177,7 +186,7 @@ def test_37_draw_stone_draws_circle_of_specified_color_at_cell_center(board_view
 
 
 def test_38_draw_stone_at_board_corners_top_left_and_bottom_right(board_view):
-    """TEST-38: 盤面端(0,0)・(14,14)への石描画が正しい中心位置に行われる(境界値)。
+    """TEST-38: 盤面四隅の交点(0,0)・(14,14)への石描画が正しい位置(交点座標)に行われる(境界値)。
 
     対応要件ID: REQ-04, CON-02, CON-04
     テスト対象(関数ID): FUNC-16
@@ -195,6 +204,63 @@ def test_38_draw_stone_at_board_corners_top_left_and_bottom_right(board_view):
 
     assert tuple(int(v) for v in canvas.coords(top_left_oval)) == (4, 4, 36, 36)
     assert tuple(int(v) for v in canvas.coords(bottom_right_oval)) == (564, 564, 596, 596)
+
+
+def test_85_draw_stone_outline_is_always_black_regardless_of_fill_color(board_view):
+    """TEST-85: 石の輪郭線(outline)が、塗りつぶし色(黒・白)に関わらず常に黒色で描画される
+    (NFR-06: 白石が盤面背景色(白)と同化せず判別可能であることの回帰防止テスト)。
+
+    対応要件ID: NFR-06
+    テスト対象(関数ID): FUNC-16
+    """
+    view, _calls = board_view
+    canvas = view._canvas
+
+    view.draw_stone(5, 5, "black")
+    view.draw_stone(9, 9, "white")
+
+    ovals = [item for item in canvas.find_all() if canvas.type(item) == "oval"]
+    assert len(ovals) == 2
+    for oval in ovals:
+        assert canvas.itemcget(oval, "outline") == "black"
+
+
+def test_86_draw_stone_center_matches_draw_empty_board_grid_intersections(board_view):
+    """TEST-86: draw_stone()が算出する石の中心座標が、draw_empty_board()が描画する格子線の
+    交点座標の集合と一致する(石の交点配置(NFR-06関連不具合)の回帰防止テスト)。
+
+    対応要件ID: REQ-04
+    テスト対象(関数ID): FUNC-15, FUNC-16
+    """
+    view, _calls = board_view
+    canvas = view._canvas
+
+    view.draw_empty_board()
+    grid_items = canvas.find_all()
+
+    xs = set()
+    ys = set()
+    for item in grid_items:
+        x1, y1, x2, y2 = canvas.coords(item)
+        if y1 == y2:
+            ys.add(y1)
+            xs.update((x1, x2))
+        else:
+            xs.add(x1)
+            ys.update((y1, y2))
+    intersections = {(x, y) for x in xs for y in ys}
+
+    sample_cells = [(0, 0), (7, 7), (14, 14), (3, 10), (10, 3)]
+    for row, col in sample_cells:
+        view.draw_stone(row, col, "black")
+
+    ovals = [item for item in canvas.find_all() if canvas.type(item) == "oval"]
+    assert len(ovals) == len(sample_cells)
+
+    for oval in ovals:
+        x1, y1, x2, y2 = canvas.coords(oval)
+        center = ((x1 + x2) / 2, (y1 + y2) / 2)
+        assert center in intersections
 
 
 # ---------------------------------------------------------------------------

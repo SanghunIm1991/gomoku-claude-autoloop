@@ -65,8 +65,8 @@
 | FUNC-12 | | | | TEST-62, TEST-63, TEST-64, TEST-65, TEST-66, TEST-67, TEST-70, TEST-71, TEST-72, TEST-73, TEST-75 | |
 | FUNC-13 | | | | TEST-68, TEST-74 | |
 | FUNC-14 | | TEST-32, TEST-33, TEST-34 | | | |
-| FUNC-15 | | TEST-35, TEST-36 | | | |
-| FUNC-16 | | TEST-36, TEST-37, TEST-38, TEST-46 | | | |
+| FUNC-15 | | TEST-35, TEST-36, TEST-86 | | | |
+| FUNC-16 | | TEST-36, TEST-37, TEST-38, TEST-46, TEST-85, TEST-86 | | | |
 | FUNC-17 | | TEST-39, TEST-40, TEST-41, TEST-42, TEST-43 | | | |
 | FUNC-18 | | TEST-44, TEST-45 | | | |
 | FUNC-19 | | | TEST-47, TEST-48 | | |
@@ -89,7 +89,7 @@ TESTMOD-05 = `tests/test_main.py`（COMP-01対応）。テストケースの詳�
 | REQ-01 | TEST-01, TEST-02, TEST-03 | TEST-32, TEST-34, TEST-35 | | | |
 | REQ-02 | TEST-01 | TEST-32, TEST-34, TEST-35 | | TEST-58, TEST-60, TEST-61, TEST-69 | TEST-76, TEST-77, TEST-78, TEST-79, TEST-80, TEST-81 |
 | REQ-03（欠番・REQ-12に統合） | | | | | |
-| REQ-04 | TEST-04, TEST-05, TEST-06, TEST-07, TEST-12 | TEST-33, TEST-37, TEST-38, TEST-39, TEST-40, TEST-41, TEST-42, TEST-43, TEST-44, TEST-45 | | TEST-59, TEST-63, TEST-64, TEST-65, TEST-66, TEST-67, TEST-70 | |
+| REQ-04 | TEST-04, TEST-05, TEST-06, TEST-07, TEST-12 | TEST-33, TEST-37, TEST-38, TEST-39, TEST-40, TEST-41, TEST-42, TEST-43, TEST-44, TEST-45, TEST-86 | | TEST-59, TEST-63, TEST-64, TEST-65, TEST-66, TEST-67, TEST-70 | |
 | REQ-05 | TEST-04, TEST-05, TEST-19, TEST-22 | | | TEST-63, TEST-64, TEST-65, TEST-66, TEST-70 | |
 | REQ-06 | TEST-08, TEST-29 | | | TEST-62, TEST-71 | |
 | REQ-07 | TEST-09, TEST-10, TEST-11, TEST-19, TEST-29 | | | TEST-62, TEST-72 | |
@@ -104,7 +104,7 @@ TESTMOD-05 = `tests/test_main.py`（COMP-01対応）。テストケースの詳�
 | NFR-03（欠番・CON-05に統合） | | | | | |
 | NFR-04 | TEST-30 | TEST-37, TEST-46 | TEST-57 | TEST-75 | |
 | NFR-05 | TEST-31 | | | TEST-67, TEST-68 | |
-| NFR-06 | | | | | |
+| NFR-06 | | TEST-85 | | | |
 | CON-01 | TEST-01 | | | | |
 | CON-02 | TEST-02, TEST-03, TEST-06, TEST-07, TEST-12 | TEST-32, TEST-34, TEST-35, TEST-38, TEST-39, TEST-40, TEST-41, TEST-42, TEST-43 | | | |
 | CON-03 | | | | TEST-70 | |
@@ -167,6 +167,6 @@ TEST-76〜TEST-81（起動処理の生成・呼び出し順序・戻り値の確
 REQ-13, NFR-04, NFR-05, CON-01〜CON-04はCOMP-01（起動処理のみを担う薄いエントリーポイント）
 の対応要件外でありCOMP-01のテストモジュールでは検証対象外。
 
-NFR-06（石の視認性）は、配布後の不具合修正に伴い要件定義書に追加された非機能要件であり、②表のFUNC-16修正・①表のCOMP-04対応は本ラウンドで反映済みだが、対応するテストはまだ作成されていない。④表ではNFR-06の行を空欄のまま追加してあり、次のテスト修正ラウンドで`tests/test_board_view.py`（TESTMOD-02）にテストIDを追記する。
+NFR-06（石の視認性）は、配布後の不具合修正に伴い要件定義書に追加された非機能要件であり、②表のFUNC-16修正・①表のCOMP-04対応に続き、テスト修正ラウンドで`tests/test_board_view.py`（TESTMOD-02）にTEST-85（石の輪郭線が塗りつぶし色に関わらず黒固定で描画されることの確認）を追加し、④表のNFR-06行に反映した。あわせて、石の交点配置（REQ-04関連）の回帰防止としてTEST-86（石の中心座標と格子線交点座標の一致確認）を追加し、④表のREQ-04行（TESTMOD-02列）にも反映した。
 
-テスト工程完了時には、④の全要件ID（REQ/NFR/CON）の行に最低1つのテストIDが記載されていることを確認し、網羅性チェックとする。ただし、REQ-03・NFR-01・NFR-02・NFR-03は要件定義書上で廃止（欠番）とし統合先（それぞれREQ-12・CON-06・CON-07・CON-05）に一本化されているため、この網羅性チェックの対象からは除外し、統合先IDの行でカバーされていることをもって足りるものとする。NFR-06は、REQ-03等の恒久的な欠番除外対象とは異なり、次のテスト修正ラウンドでテストIDを追記した後にあらためて充足確認を行う対象とする。
+テスト工程完了時には、④の全要件ID（REQ/NFR/CON）の行に最低1つのテストIDが記載されていることを確認し、網羅性チェックとする。ただし、REQ-03・NFR-01・NFR-02・NFR-03は要件定義書上で廃止（欠番）とし統合先（それぞれREQ-12・CON-06・CON-07・CON-05）に一本化されているため、この網羅性チェックの対象からは除外し、統合先IDの行でカバーされていることをもって足りるものとする。NFR-06は上記の通りTEST-85を追記済みであり、④表の全要件ID行にテストIDが記載されている状態を維持している。

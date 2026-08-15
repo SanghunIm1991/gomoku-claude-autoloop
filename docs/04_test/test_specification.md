@@ -152,11 +152,13 @@ COMP-03（メインウィンドウ・GUIコントローラ層）・COMP-01（エ
 |---|---|---|---|---|---|---|
 | TEST-32 | FUNC-14 | REQ-01, REQ-02, CON-02 | `BoardView` の初期化により、指定ピクセルサイズ（盤面全体, 600×600）の `Canvas` がparent配下に生成・配置されることを確認する | `tk.Tk()` を親として `BoardView(root, on_click)` を生成した直後 | `board_view._canvas` が `tk.Canvas` のインスタンスである。`int(canvas.cget('width')) == BOARD_PIXEL_SIZE`（600）。`int(canvas.cget('height')) == BOARD_PIXEL_SIZE`（600） | `test_32_init_creates_canvas_with_board_pixel_size` |
 | TEST-33 | FUNC-14 | REQ-04 | 初期化時、Canvasの `<Button-1>` イベントに `_on_canvas_click` へのバインドが設定されていることを確認する | `BoardView(root, on_click)` を生成した直後 | `canvas.bind('<Button-1>')` が空文字列でない（Tclコマンド名が返り、バインドが存在することを示す） | `test_33_init_binds_button1_to_on_canvas_click` |
-| TEST-34 | FUNC-14 | REQ-01, REQ-02, CON-02 | 初期化直後に `draw_empty_board()` が呼ばれ、格子線のみが描画され石が1つも存在しないことを確認する | `BoardView(root, on_click)` を生成した直後（`draw_empty_board()` を明示的に呼ばない） | `canvas.find_all()` の件数が32（15×15マス分の格子線: 横16本+縦16本）。すべてのアイテムの `canvas.type(item) == 'line'`。`'oval'` 型のアイテムは存在しない | `test_34_init_calls_draw_empty_board_and_draws_grid_lines_only` |
-| TEST-35 | FUNC-15 | REQ-01, REQ-02, CON-02 | `draw_empty_board()` により、15×15マス分の格子線が正しい座標で描画されることを確認する（正常系） | `BoardView` 生成後、`draw_empty_board()` を明示的に呼び出す | 格子線の座標の集合が、`{(0, i*40, 600, i*40) for i in range(16)} ∪ {(i*40, 0, i*40, 600) for i in range(16)}`（計32本）と一致する。石（`oval`）は存在しない | `test_35_draw_empty_board_draws_grid_lines_with_correct_coordinates` |
-| TEST-36 | FUNC-15, FUNC-16 | REQ-13 | 石が描画された状態から `draw_empty_board()` を呼ぶと、石を含む描画内容がすべて消去され格子線のみの状態に戻ることを確認する（リスタート時の盤面クリアに相当） | `BoardView` 生成後、`draw_stone(5, 5, 'black')` と `draw_stone(2, 2, 'white')` を呼び出して石を2つ描画した状態で `draw_empty_board()` を呼ぶ | `draw_empty_board()` 呼び出し後、`canvas.find_all()` の件数が32、すべて `type == 'line'` であり、`'oval'` 型のアイテムが1つも存在しない（呼び出し前は `oval` が2つ存在したことも確認する） | `test_36_draw_empty_board_clears_existing_stones` |
-| TEST-37 | FUNC-16 | REQ-04, CON-04, NFR-04 | 指定マスの中心に指定色（黒・白）で塗りつぶした円が描画されることを確認する | `draw_stone(7, 7, 'black')` および `draw_stone(3, 10, 'white')` を呼び出す | (7,7)黒: 生成された `oval` の `coords` が `(284, 284, 316, 316)`（中心 (300,300)、半径16）、`itemcget('fill') == 'black'`。(3,10)白: `coords` が `(404, 124, 436, 156)`（中心 (420,140)、半径16）、`itemcget('fill') == 'white'` | `test_37_draw_stone_draws_circle_of_specified_color_at_cell_center` |
-| TEST-38 | FUNC-16 | REQ-04, CON-02, CON-04 | 盤面端 `(0,0)`・`(14,14)` への石描画が正しい中心位置に行われることを確認する（境界値） | `draw_stone(0, 0, 'black')` と `draw_stone(14, 14, 'white')` を呼び出す | `(0,0)`: `coords` が `(4, 4, 36, 36)`（中心 (20,20)）。`(14,14)`: `coords` が `(564, 564, 596, 596)`（中心 (580,580)） | `test_38_draw_stone_at_board_corners_top_left_and_bottom_right` |
+| TEST-34 | FUNC-14 | REQ-01, REQ-02, CON-02 | 初期化直後に `draw_empty_board()` が呼ばれ、格子線のみが描画され石が1つも存在しないことを確認する | `BoardView(root, on_click)` を生成した直後（`draw_empty_board()` を明示的に呼ばない） | `canvas.find_all()` の件数が30（15本×15本の格子線: 横15本+縦15本）。すべてのアイテムの `canvas.type(item) == 'line'`。`'oval'` 型のアイテムは存在しない | `test_34_init_calls_draw_empty_board_and_draws_grid_lines_only` |
+| TEST-35 | FUNC-15 | REQ-01, REQ-02, CON-02 | `draw_empty_board()` により、15本×15本（計30本）の格子線が、交点座標（`_GRID_MARGIN` 起点、`CELL_SIZE` 間隔で並ぶ交点と交点の間のみを結ぶ）で正しく描画されることを確認する（正常系） | `BoardView` 生成後、`draw_empty_board()` を明示的に呼び出す | `first = _GRID_MARGIN`, `last = _GRID_MARGIN + (BOARD_CELLS-1)*CELL_SIZE` として、格子線の座標の集合が `{(first, _GRID_MARGIN+i*CELL_SIZE, last, _GRID_MARGIN+i*CELL_SIZE) for i in range(15)} ∪ {(_GRID_MARGIN+i*CELL_SIZE, first, _GRID_MARGIN+i*CELL_SIZE, last) for i in range(15)}`（計30本、実装上の数値では `_GRID_MARGIN=20`, `CELL_SIZE=40` により `first=20`, `last=580`）と一致する。石（`oval`）は存在しない | `test_35_draw_empty_board_draws_grid_lines_with_correct_coordinates` |
+| TEST-36 | FUNC-15, FUNC-16 | REQ-13 | 石が描画された状態から `draw_empty_board()` を呼ぶと、石を含む描画内容がすべて消去され格子線のみの状態に戻ることを確認する（リスタート時の盤面クリアに相当） | `BoardView` 生成後、`draw_stone(5, 5, 'black')` と `draw_stone(2, 2, 'white')` を呼び出して石を2つ描画した状態で `draw_empty_board()` を呼ぶ | `draw_empty_board()` 呼び出し後、`canvas.find_all()` の件数が30、すべて `type == 'line'` であり、`'oval'` 型のアイテムが1つも存在しない（呼び出し前は `oval` が2つ存在したことも確認する） | `test_36_draw_empty_board_clears_existing_stones` |
+| TEST-37 | FUNC-16 | REQ-04, CON-04, NFR-04 | 指定行・列インデックスに対応する交点に指定色（黒・白）で塗りつぶした円が描画されることを確認する | `draw_stone(7, 7, 'black')` および `draw_stone(3, 10, 'white')` を呼び出す | (7,7)黒: 生成された `oval` の `coords` が `(284, 284, 316, 316)`（中心 (300,300)、半径16）、`itemcget('fill') == 'black'`。(3,10)白: `coords` が `(404, 124, 436, 156)`（中心 (420,140)、半径16）、`itemcget('fill') == 'white'` | `test_37_draw_stone_draws_circle_of_specified_color_at_cell_center` |
+| TEST-38 | FUNC-16 | REQ-04, CON-02, CON-04 | 盤面四隅の交点 `(0,0)`・`(14,14)` への石描画が正しい位置（交点座標）に行われることを確認する（境界値） | `draw_stone(0, 0, 'black')` と `draw_stone(14, 14, 'white')` を呼び出す | `(0,0)`: `coords` が `(4, 4, 36, 36)`（中心 (20,20)）。`(14,14)`: `coords` が `(564, 564, 596, 596)`（中心 (580,580)） | `test_38_draw_stone_at_board_corners_top_left_and_bottom_right` |
+| TEST-85 | FUNC-16 | NFR-06 | 石の輪郭線（`outline`）が、塗りつぶし色（黒・白）に関わらず常に黒色で描画されることを確認する（白石が盤面背景色（白）と同化せず判別可能であることの回帰防止テスト） | `draw_stone(5, 5, 'black')` と `draw_stone(9, 9, 'white')` を呼び出す | いずれの `oval` も `itemcget('outline') == 'black'` | `test_85_draw_stone_outline_is_always_black_regardless_of_fill_color` |
+| TEST-86 | FUNC-15, FUNC-16 | REQ-04 | `draw_stone()` が算出する石の中心座標が、`draw_empty_board()` が描画する格子線の交点座標の集合と一致することを確認する（石の交点配置の回帰防止テスト） | `draw_empty_board()` 呼び出し後の格子線座標から交点座標の集合を求め、`(0,0), (7,7), (14,14), (3,10), (10,3)` に `draw_stone(row, col, 'black')` を呼び出す | 各 `oval` の中心座標（`coords` から算出）が、格子線から求めた交点座標の集合にすべて含まれる | `test_86_draw_stone_center_matches_draw_empty_board_grid_intersections` |
 | TEST-39 | FUNC-17 | REQ-04, CON-02 | マス目の境界線ちょうどのピクセル座標は、整数除算の切り捨てにより下側・右側に隣接するマスに属すると判定されることを確認する（境界値） | `_pixel_to_cell(x, y)` に `(40, 0)`, `(0, 40)`, `(40, 40)` を渡す | `(40,0) -> (0,1)`。`(0,40) -> (1,0)`。`(40,40) -> (1,1)`（いずれも境界線を挟んで手前のマス `(0,0)` ではなく、次のマスに属する） | `test_39_pixel_to_cell_boundary_falls_to_next_cell` |
 | TEST-40 | FUNC-17 | REQ-04, CON-02 | 盤面左上端のピクセル `(0, 0)` が `(0, 0)` セルに対応することを確認する（境界値） | `_pixel_to_cell(0, 0)` | 戻り値が `(0, 0)` | `test_40_pixel_to_cell_top_left_pixel_is_cell_0_0` |
 | TEST-41 | FUNC-17 | REQ-04, CON-02 | 盤面右下端の最終ピクセル（`BOARD_PIXEL_SIZE - 1` = 599）が `(14, 14)` セルに対応し、範囲内の値を返すことを確認する（境界値） | `_pixel_to_cell(599, 599)` | 戻り値が `(14, 14)` | `test_41_pixel_to_cell_last_pixel_is_cell_14_14` |
@@ -168,15 +170,15 @@ COMP-03（メインウィンドウ・GUIコントローラ層）・COMP-01（エ
 
 ### 4.2 補足
 
-- TEST-32〜TEST-46はいずれも、実際に `tk.Tk()` を生成し `root.withdraw()` で非表示化した上で
-  `BoardView` を構築し、Canvas上の実際の描画結果を検証する（4.0節参照）。`conftest.py` は
-  `sys.path` への `src` 追加のみを行いGUI関連の初期化は行わないため、`import tkinter` および
-  `tk.Tk()` の呼び出しは `tests/test_board_view.py` 側で行う。
+- TEST-32〜TEST-46・TEST-85・TEST-86はいずれも、実際に `tk.Tk()` を生成し `root.withdraw()`
+  で非表示化した上で `BoardView` を構築し、Canvas上の実際の描画結果を検証する（4.0節参照）。
+  `conftest.py` は `sys.path` への `src` 追加のみを行いGUI関連の初期化は行わないため、
+  `import tkinter` および `tk.Tk()` の呼び出しは `tests/test_board_view.py` 側で行う。
 - TEST-37・TEST-38（`draw_stone` の描画位置検証）で用いる中心座標・円の座標は、
   `src/board_view.py` の実装（`center = col*40+20` または `row*40+20`、
   `radius = 20 - _STONE_MARGIN(4) = 16`）から機械的に算出した値であり、関数設計書FUNC-16の
-  「指定マスの中心に、指定色で塗りつぶした円を描画する」という仕様どおりの位置に描画されて
-  いることの確認である。
+  「指定された行・列インデックスに対応する交点に、指定色で塗りつぶした円を描画する」という
+  仕様どおりの位置に描画されていることの確認である。
 - TEST-39〜TEST-43（`_pixel_to_cell` の境界値）は、関数設計書FUNC-17の境界値・異常系の記述
   （「境界線は下側・右側に隣接するマスに属する」「盤面の描画領域サイズと**等しい**場合も
   `None` になる」）を1件ずつ網羅する形で設計している。
@@ -186,10 +188,19 @@ COMP-03（メインウィンドウ・GUIコントローラ層）・COMP-01（エ
   TEST-42・TEST-43で別途検証済みのため、TEST-45では代表的な2パターン（ちょうど等しい座標・
   負の座標）のみを確認する。
 - REQ-01・REQ-02・CON-02は主にTEST-32・TEST-34・TEST-35（Canvasサイズ・初期格子線描画）で、
-  REQ-04は主にTEST-33・TEST-37〜TEST-45（クリック→座標変換→石描画・コールバック通知の一連の
-  流れ）で、REQ-13はTEST-36（リスタート時の盤面クリアに相当する `draw_empty_board()` による
-  石の消去）で、CON-04はTEST-37・TEST-38（黒・白2色の描画）で、それぞれ検証する。NFR-04は
-  TEST-37・TEST-46（実際の描画処理の体感遅延なしでの完了）で検証する。
+  REQ-04は主にTEST-33・TEST-37〜TEST-45・TEST-86（クリック→座標変換→石描画・コールバック通知の
+  一連の流れ、および石の交点配置）で、REQ-13はTEST-36（リスタート時の盤面クリアに相当する
+  `draw_empty_board()` による石の消去）で、CON-04はTEST-37・TEST-38（黒・白2色の描画）で、
+  それぞれ検証する。NFR-04はTEST-37・TEST-46（実際の描画処理の体感遅延なしでの完了）で検証する。
+- 配布後に発覚したGUI不具合（石が交点でなくマス中央に描画される・白石が視認できない）への
+  対処として、`draw_empty_board()`（FUNC-15）が描画する格子線を、盤面外周線を含む16本×16本
+  （計32本、マス目の境界）から、`_GRID_MARGIN` を起点に `CELL_SIZE` 間隔で並ぶ交点座標に
+  基づく15本×15本（計30本）に変更した（経緯は `docs/review_log.md` の「不具合修正（上流工程・
+  COMP-04）」「不具合修正（実装・COMP-04）」を参照）。これに伴い、TEST-34・TEST-35・TEST-36の
+  期待するアイテム数・座標を新仕様（30本・交点座標）に更新し、`draw_stone()`（FUNC-16）の輪郭線
+  （`outline`）を色に関わらず黒固定で描画するNFR-06対応の回帰防止としてTEST-85を、石の中心座標が
+  格子線の交点座標と数値的に一致することの回帰防止としてTEST-86を、それぞれ新規に追加した
+  （由来: レビュー指摘ベース）。
 
 ## 5. COMP-05（ステータス表示・操作パネル層）節
 
