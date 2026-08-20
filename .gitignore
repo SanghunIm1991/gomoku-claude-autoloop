@@ -3,3 +3,6 @@ __pycache__/
 .pytest_cache/
 build/
 dist/
+
+# 比較分析用に配置した別プロジェクト（独自の.gitを持つファイルコピー、本リポジトリでは追跡しない）
+otherproject/
